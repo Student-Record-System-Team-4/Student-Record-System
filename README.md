@@ -15,7 +15,7 @@ The Student Record System is a software system designed to manage student inform
 
 ## Documentation
 
-- [Software Requirements Specification (SRS)](docs/Student_Record_System_SRS.pdf)
+- [Software Requirements Specification (SRS)](docs/SRS-Document.pdf)
 
 ## Project Status
 
