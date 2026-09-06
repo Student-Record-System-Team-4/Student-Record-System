@@ -1,2 +1,22 @@
 # Student-Record-System
-A record keeping system for student details like grades and attendance. 
+
+Software Engineering Project
+
+## Team Members
+
+- Nitya Kushwaha 
+- Nitin Somisetty
+- Poorvika V
+- Pattamsetty Abhay Babji
+
+## Project Description
+
+The Student Record System is a software system designed to manage student information and academic records.
+
+## Documentation
+
+- [Software Requirements Specification (SRS)](docs/Student_Record_System_SRS.pdf)
+
+## Project Status
+
+Currently in the requirements and design phase.
