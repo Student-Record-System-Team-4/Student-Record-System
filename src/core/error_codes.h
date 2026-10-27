@@ -1,1 +1,16 @@
+#ifndef STUDENT_RECORD_SYSTEM_CORE_ERROR_CODES_H
+#define STUDENT_RECORD_SYSTEM_CORE_ERROR_CODES_H
 
+namespace srs::core {
+
+enum class ErrorCode {
+    INVALID_INPUT,
+    NOT_FOUND,
+    ALREADY_EXISTS,
+    PERMISSION_DENIED,
+    INTERNAL_ERROR
+};
+
+}  // namespace srs::core
+
+#endif  // STUDENT_RECORD_SYSTEM_CORE_ERROR_CODES_H
