@@ -1,5 +1,6 @@
 
 #include <catch2/catch_test_macros.hpp>
+
 #include <string>
 
 #include "auth/password_hasher.h"
@@ -11,6 +12,7 @@ TEST_CASE("Password hashing and verification", "[auth][password]") {
         srs::auth::PasswordHasher::hash_password(password);
 
     REQUIRE(hashed);
+
     REQUIRE(hashed.value() != nullptr);
 
     const std::string stored_hash = *hashed.value();
