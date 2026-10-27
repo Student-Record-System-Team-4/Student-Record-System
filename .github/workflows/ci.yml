@@ -16,7 +16,7 @@ jobs:
           - os: ubuntu-latest
             generator: Unix Makefiles
           - os: windows-latest
-            generator: Visual Studio 17 2022
+            generator: Ninja
 
     steps:
       - name: Check out repository
