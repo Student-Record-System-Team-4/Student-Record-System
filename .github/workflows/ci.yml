@@ -15,25 +15,23 @@ jobs:
           - os: ubuntu-latest
             generator: Unix Makefiles
           - os: windows-latest
-            generator: Visual Studio 17 2022
+            generator: NMake Makefiles
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Set up MSVC
-        if: runner.os == 'Windows'
-        uses: microsoft/setup-msbuild@v2
-
       - name: Initialize MSVC developer environment
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
 
       - name: Configure
         run: cmake -S . -B build -G "${{ matrix.generator }}" -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
-        run: cmake --build build --config Release
+        run: cmake --build build
 
       - name: Test
-        run: ctest --test-dir build --build-config Release --output-on-failure
+        run: ctest --test-dir build --output-on-failure
