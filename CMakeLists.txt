@@ -21,14 +21,18 @@ FetchContent_MakeAvailable(Catch2)
 list(APPEND CMAKE_MODULE_PATH "${catch2_SOURCE_DIR}/extras")
 include(Catch)
 
-add_library(srs_core INTERFACE)
+add_library(srs_core STATIC
+    src/auth/authentication.cpp
+)
 
-target_include_directories(srs_core INTERFACE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
+target_include_directories(
+    srs_core
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 add_executable(test_validator
     tests/test_validator.cpp
+    tests/test_authentication.cpp
 )
 
 target_link_libraries(test_validator PRIVATE
