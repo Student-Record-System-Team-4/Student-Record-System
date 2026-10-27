@@ -30,8 +30,13 @@ public:
 
     bool is_authenticated(const std::string& session_id) const;
 
+    bool is_registered(const std::string& username) const;
+
+    bool set_user_active(const std::string& username, bool active);
+
 private:
     std::unordered_map<std::string, std::string> password_hashes_;
+    std::unordered_map<std::string, bool> active_users_;
     std::unordered_map<std::string, Session> sessions_;
     unsigned long long next_session_id_ = 1;
 };

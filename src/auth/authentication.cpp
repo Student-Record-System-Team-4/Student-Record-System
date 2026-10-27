@@ -16,8 +16,10 @@ AuthenticationService::AuthenticationService(
         }
         const auto password_hash = PasswordHasher::hash_password(user.password);
         if (password_hash) {
-            password_hashes_[std::move(user.username)] =
+            const std::string username = user.username;
+            password_hashes_[username] =
                 *password_hash.value();
+            active_users_[username] = true;
         }
     }
 }
@@ -32,6 +34,9 @@ std::unique_ptr<Session> AuthenticationService::login(
 
     const auto user = password_hashes_.find(username);
     if (user == password_hashes_.end()) {
+        return nullptr;
+    }
+    if (!active_users_[username]) {
         return nullptr;
     }
 
@@ -55,6 +60,21 @@ bool AuthenticationService::logout(const std::string& session_id) {
 bool AuthenticationService::is_authenticated(
     const std::string& session_id) const {
     return sessions_.find(session_id) != sessions_.end();
+}
+
+bool AuthenticationService::is_registered(const std::string& username) const {
+    return password_hashes_.find(username) != password_hashes_.end();
+}
+
+bool AuthenticationService::set_user_active(
+    const std::string& username,
+    bool active) {
+    const auto user = active_users_.find(username);
+    if (user == active_users_.end()) {
+        return false;
+    }
+    user->second = active;
+    return true;
 }
 
 }  // namespace srs::auth
