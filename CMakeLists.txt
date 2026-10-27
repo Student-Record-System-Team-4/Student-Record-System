@@ -22,15 +22,18 @@ include(CTest)
 
 enable_testing()
 
-add_library(srs_core INTERFACE)
+add_library(srs_core STATIC
+    src/auth/authentication.cpp
+)
 
 target_include_directories(
     srs_core
-    INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 add_executable(test_validator
     tests/test_validator.cpp
+    tests/test_authentication.cpp
 )
 
 target_link_libraries(
