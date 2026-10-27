@@ -1,4 +1,3 @@
-
 #ifndef STUDENT_RECORD_SYSTEM_CORE_VALIDATOR_H
 #define STUDENT_RECORD_SYSTEM_CORE_VALIDATOR_H
 
@@ -26,8 +25,9 @@ public:
                 return Result<void>::failure(ErrorCode::INVALID_INPUT);
             }
 
-            if (ch != ' ' && ch != '\t' && ch != '\n' &&
-                ch != '\r' && ch != '\f' && ch != '\v') {
+            if (ch != ' ' && ch != '\t' &&
+                ch != '\n' && ch != '\r' &&
+                ch != '\f' && ch != '\v') {
                 has_non_whitespace = true;
             }
         }
@@ -51,8 +51,9 @@ public:
                 return Result<void>::failure(ErrorCode::INVALID_INPUT);
             }
 
-            if (ch != ' ' && ch != '\t' && ch != '\n' &&
-                ch != '\r' && ch != '\f' && ch != '\v') {
+            if (ch != ' ' && ch != '\t' &&
+                ch != '\n' && ch != '\r' &&
+                ch != '\f' && ch != '\v') {
                 has_non_whitespace = true;
             }
         }

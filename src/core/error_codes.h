@@ -4,10 +4,14 @@
 namespace srs::core {
 
 enum class ErrorCode {
+    NONE,
     INVALID_INPUT,
     NOT_FOUND,
     ALREADY_EXISTS,
     PERMISSION_DENIED,
+    INVALID_CREDENTIALS,
+    HASHING_ERROR,
+    SESSION_ERROR,
     INTERNAL_ERROR
 };
 
