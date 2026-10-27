@@ -3,20 +3,41 @@
 #include <string>
 #include <utility>
 
+#include "auth/password_hasher.h"
+#include "core/validator.h"
+
 namespace srs::auth {
 
 AuthenticationService::AuthenticationService(
     std::vector<User> registered_users) {
     for (auto& user : registered_users) {
-        passwords_[std::move(user.username)] = std::move(user.password);
+        if (!srs::core::Validator::validate_username(user.username)) {
+            continue;
+        }
+        const auto password_hash = PasswordHasher::hash_password(user.password);
+        if (password_hash) {
+            password_hashes_[std::move(user.username)] =
+                *password_hash.value();
+        }
     }
 }
 
 std::unique_ptr<Session> AuthenticationService::login(
     const std::string& username,
     const std::string& password) {
-    const auto user = passwords_.find(username);
-    if (user == passwords_.end() || user->second != password) {
+    if (!srs::core::Validator::validate_username(username) ||
+        !srs::core::Validator::validate_password(password)) {
+        return nullptr;
+    }
+
+    const auto user = password_hashes_.find(username);
+    if (user == password_hashes_.end()) {
+        return nullptr;
+    }
+
+    const auto password_matches =
+        PasswordHasher::verify_password(password, user->second);
+    if (!password_matches || !*password_matches.value()) {
         return nullptr;
     }
 

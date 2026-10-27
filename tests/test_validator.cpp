@@ -26,13 +26,27 @@ TEST_CASE("Username validation", "[validator][username]") {
         REQUIRE(result);
     }
 
-    SECTION("Accepts usernames with surrounding whitespace") {
+    SECTION("Rejects usernames with surrounding whitespace") {
         auto result = Validator::validate_username(" student123 ");
-        REQUIRE(result);
+        REQUIRE_FALSE(result);
+        REQUIRE(result.error() == ErrorCode::INVALID_INPUT);
     }
 
     SECTION("Rejects embedded null characters") {
         const std::string username("student\0name", 12);
+        auto result = Validator::validate_username(username);
+        REQUIRE_FALSE(result);
+        REQUIRE(result.error() == ErrorCode::INVALID_INPUT);
+    }
+
+    SECTION("Rejects usernames with unsupported characters") {
+        auto result = Validator::validate_username("student@example");
+        REQUIRE_FALSE(result);
+        REQUIRE(result.error() == ErrorCode::INVALID_INPUT);
+    }
+
+    SECTION("Rejects usernames longer than the maximum length") {
+        const std::string username(65, 'a');
         auto result = Validator::validate_username(username);
         REQUIRE_FALSE(result);
         REQUIRE(result.error() == ErrorCode::INVALID_INPUT);
@@ -70,6 +84,20 @@ TEST_CASE("Password validation", "[validator][password]") {
 
     SECTION("Rejects embedded null characters") {
         const std::string password("Pass\0word123", 12);
+        auto result = Validator::validate_password(password);
+        REQUIRE_FALSE(result);
+        REQUIRE(result.error() == ErrorCode::INVALID_INPUT);
+    }
+
+    SECTION("Rejects passwords containing control characters") {
+        const std::string password("Pass123\001", 8);
+        auto result = Validator::validate_password(password);
+        REQUIRE_FALSE(result);
+        REQUIRE(result.error() == ErrorCode::INVALID_INPUT);
+    }
+
+    SECTION("Rejects passwords longer than the maximum length") {
+        const std::string password(129, 'a');
         auto result = Validator::validate_password(password);
         REQUIRE_FALSE(result);
         REQUIRE(result.error() == ErrorCode::INVALID_INPUT);

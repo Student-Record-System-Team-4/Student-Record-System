@@ -11,49 +11,41 @@ namespace srs::core {
 
 class Validator {
 public:
+    static constexpr std::size_t MAX_USERNAME_LENGTH = 64;
     static constexpr std::size_t MIN_PASSWORD_LENGTH = 8;
+    static constexpr std::size_t MAX_PASSWORD_LENGTH = 128;
 
     static Result<void> validate_username(const std::string& username) {
-        if (username.empty()) {
+        if (username.empty() || username.size() > MAX_USERNAME_LENGTH) {
             return Result<void>::failure(ErrorCode::INVALID_INPUT);
         }
-
-        bool has_non_whitespace = false;
 
         for (char ch : username) {
-            if (ch == '\0') {
+            const bool is_letter =
+                (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z');
+            const bool is_digit = ch >= '0' && ch <= '9';
+            if (!is_letter && !is_digit && ch != '_' && ch != '-') {
                 return Result<void>::failure(ErrorCode::INVALID_INPUT);
             }
-
-            if (ch != ' ' && ch != '\t' &&
-                ch != '\n' && ch != '\r' &&
-                ch != '\f' && ch != '\v') {
-                has_non_whitespace = true;
-            }
-        }
-
-        if (!has_non_whitespace) {
-            return Result<void>::failure(ErrorCode::INVALID_INPUT);
         }
 
         return Result<void>::success();
     }
 
     static Result<void> validate_password(const std::string& password) {
-        if (password.size() < MIN_PASSWORD_LENGTH) {
+        if (password.size() < MIN_PASSWORD_LENGTH ||
+            password.size() > MAX_PASSWORD_LENGTH) {
             return Result<void>::failure(ErrorCode::INVALID_INPUT);
         }
 
         bool has_non_whitespace = false;
 
         for (char ch : password) {
-            if (ch == '\0') {
+            if (ch < 33 || ch > 126) {
                 return Result<void>::failure(ErrorCode::INVALID_INPUT);
             }
 
-            if (ch != ' ' && ch != '\t' &&
-                ch != '\n' && ch != '\r' &&
-                ch != '\f' && ch != '\v') {
+            if (ch != ' ') {
                 has_non_whitespace = true;
             }
         }
