@@ -31,7 +31,7 @@ public:
     bool is_authenticated(const std::string& session_id) const;
 
 private:
-    std::unordered_map<std::string, std::string> passwords_;
+    std::unordered_map<std::string, std::string> password_hashes_;
     std::unordered_map<std::string, Session> sessions_;
     unsigned long long next_session_id_ = 1;
 };

@@ -50,3 +50,10 @@ TEST_CASE("Password hashing and verification", "[auth][password]") {
         REQUIRE(*second_hash.value() != stored_hash);
     }
 }
+
+TEST_CASE("Invalid passwords are rejected before hashing", "[auth][password]") {
+    REQUIRE_FALSE(
+        srs::auth::PasswordHasher::hash_password("short"));
+    REQUIRE_FALSE(
+        srs::auth::PasswordHasher::hash_password("Pass\001word"));
+}

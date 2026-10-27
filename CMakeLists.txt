@@ -23,6 +23,7 @@ include(Catch)
 
 add_library(srs_core STATIC
     src/auth/authentication.cpp
+    src/auth/password_hasher.cpp
 )
 
 target_include_directories(
@@ -33,6 +34,7 @@ target_include_directories(
 add_executable(test_validator
     tests/test_validator.cpp
     tests/test_authentication.cpp
+    tests/test_password_hasher.cpp
 )
 
 target_link_libraries(test_validator PRIVATE

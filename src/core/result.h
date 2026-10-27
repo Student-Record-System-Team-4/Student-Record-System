@@ -1,7 +1,7 @@
 #ifndef STUDENT_RECORD_SYSTEM_CORE_RESULT_H
 #define STUDENT_RECORD_SYSTEM_CORE_RESULT_H
 
-#include <optional>
+#include <memory>
 #include <utility>
 
 #include "error_codes.h"
@@ -20,7 +20,7 @@ public:
     }
 
     bool has_value() const noexcept {
-        return value_.has_value();
+        return value_ != nullptr;
     }
 
     explicit operator bool() const noexcept {
@@ -28,11 +28,11 @@ public:
     }
 
     const T* value() const noexcept {
-        return value_ ? &(*value_) : nullptr;
+        return value_.get();
     }
 
     T* value() noexcept {
-        return value_ ? &(*value_) : nullptr;
+        return value_.get();
     }
 
     ErrorCode error() const noexcept {
@@ -41,12 +41,12 @@ public:
 
 private:
     explicit Result(T value)
-        : value_(std::move(value)), error_(ErrorCode::NONE) {}
+        : value_(new T(std::move(value))), error_(ErrorCode::NONE) {}
 
     explicit Result(ErrorCode error)
-        : value_(std::nullopt), error_(error) {}
+        : value_(nullptr), error_(error) {}
 
-    std::optional<T> value_;
+    std::unique_ptr<T> value_;
     ErrorCode error_;
 };
 
