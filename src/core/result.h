@@ -3,6 +3,7 @@
 
 #include <optional>
 #include <utility>
+
 #include "error_codes.h"
 
 namespace srs::core {
@@ -10,12 +11,12 @@ namespace srs::core {
 template <typename T>
 class Result {
 public:
-    static Result success(T value) {
-        return Result(std::move(value));
+    static Result<T> success(T value) {
+        return Result<T>(std::move(value));
     }
 
-    static Result failure(ErrorCode error) {
-        return Result(error);
+    static Result<T> failure(ErrorCode error) {
+        return Result<T>(error);
     }
 
     bool has_value() const noexcept {
@@ -52,16 +53,16 @@ private:
 template <>
 class Result<void> {
 public:
-    static Result success() {
-        return Result(ErrorCode::NONE);
+    static Result<void> success() {
+        return Result<void>(true, ErrorCode::NONE);
     }
 
-    static Result failure(ErrorCode error) {
-        return Result(error);
+    static Result<void> failure(ErrorCode error) {
+        return Result<void>(false, error);
     }
 
     bool has_value() const noexcept {
-        return error_ == ErrorCode::NONE;
+        return success_;
     }
 
     explicit operator bool() const noexcept {
@@ -73,10 +74,13 @@ public:
     }
 
 private:
-    explicit Result(ErrorCode error) : error_(error) {}
+    Result(bool success, ErrorCode error)
+        : success_(success), error_(error) {}
+
+    bool success_;
     ErrorCode error_;
 };
 
 }  // namespace srs::core
 
-#endif
+#endif  // STUDENT_RECORD_SYSTEM_CORE_RESULT_H

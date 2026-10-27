@@ -1,14 +1,13 @@
-
-name: C++ Build and Tests
+name: CI
 
 on:
   push:
     branches:
       - main
-      - TASK-04-core-library
   pull_request:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   build-and-test:
@@ -23,11 +22,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y cmake g++ pkg-config libsodium-dev
 
-      - name: Configure
-        run: cmake -S . -B build
+      - name: Configure project
+        run: cmake -S . -B build -DBUILD_TESTING=ON
 
-      - name: Build
-        run: cmake --build build --parallel
+      - name: Build project
+        run: cmake --build build --parallel 2
 
       - name: Run tests
         run: ctest --test-dir build --output-on-failure

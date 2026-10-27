@@ -1,4 +1,3 @@
-
 #ifndef STUDENT_RECORD_SYSTEM_CORE_VALIDATOR_H
 #define STUDENT_RECORD_SYSTEM_CORE_VALIDATOR_H
 
@@ -19,7 +18,6 @@ public:
             return Result<void>::failure(ErrorCode::INVALID_INPUT);
         }
 
-        // Reject whitespace-only usernames.
         bool has_non_whitespace = false;
 
         for (char ch : username) {
@@ -46,7 +44,6 @@ public:
             return Result<void>::failure(ErrorCode::INVALID_INPUT);
         }
 
-        // Reject embedded nulls and passwords made entirely of whitespace.
         bool has_non_whitespace = false;
 
         for (char ch : password) {
