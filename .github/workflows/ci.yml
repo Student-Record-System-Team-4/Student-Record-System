@@ -23,6 +23,10 @@ jobs:
 
       - name: Set up MSVC
         if: runner.os == 'Windows'
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Initialize MSVC developer environment
+        if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
 
       - name: Configure
