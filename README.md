@@ -41,3 +41,5 @@ generator.
 ## Documentation
 
 - [Software Requirements Specification](docs/SRS-Document.pdf)
+- - [Testing Report](docs/Testing-Report.md)
+- [Requirements Traceability](docs/Requirements-Traceability.md)
