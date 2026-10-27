@@ -23,16 +23,17 @@ include(Catch)
 
 add_library(srs_core STATIC
     src/auth/authentication.cpp
+    src/student/student.cpp
 )
 
-target_include_directories(
-    srs_core
+target_include_directories(srs_core
     PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 add_executable(test_validator
     tests/test_validator.cpp
     tests/test_authentication.cpp
+    tests/test_student.cpp
 )
 
 target_link_libraries(test_validator PRIVATE
