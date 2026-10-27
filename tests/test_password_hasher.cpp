@@ -1,35 +1,47 @@
 
-#include <cassert>
-#include <iostream>
+#include <catch2/catch_test_macros.hpp>
 #include <string>
 
 #include "auth/password_hasher.h"
 
-int main() {
-    using srs::auth::PasswordHasher;
-
+TEST_CASE("Password hashing and verification", "[auth][password]") {
     const std::string password = "SecurePass123";
 
-    auto hashed = PasswordHasher::hash_password(password);
-    assert(hashed && hashed.value() != nullptr);
+    auto hashed = srs::auth::PasswordHasher::hash_password(password);
+
+    REQUIRE(hashed);
+    REQUIRE(hashed.value() != nullptr);
 
     const std::string stored_hash = *hashed.value();
-    assert(stored_hash != password);
 
-    auto correct = PasswordHasher::verify_password(
-        password, stored_hash);
-    assert(correct && correct.value() != nullptr);
-    assert(*correct.value());
+    SECTION("Stored hash is not the plaintext password") {
+        REQUIRE(stored_hash != password);
+    }
 
-    auto incorrect = PasswordHasher::verify_password(
-        "WrongPass123", stored_hash);
-    assert(incorrect && incorrect.value() != nullptr);
-    assert(!*incorrect.value());
+    SECTION("Correct password is accepted") {
+        auto result = srs::auth::PasswordHasher::verify_password(
+            password, stored_hash);
 
-    auto different_hash = PasswordHasher::hash_password(password);
-    assert(different_hash && different_hash.value() != nullptr);
-    assert(*different_hash.value() != stored_hash);
+        REQUIRE(result);
+        REQUIRE(result.value() != nullptr);
+        REQUIRE(*result.value());
+    }
 
-    std::cout << "All password hasher tests passed.\n";
-    return 0;
+    SECTION("Incorrect password is rejected") {
+        auto result = srs::auth::PasswordHasher::verify_password(
+            "WrongPass123", stored_hash);
+
+        REQUIRE(result);
+        REQUIRE(result.value() != nullptr);
+        REQUIRE_FALSE(*result.value());
+    }
+
+    SECTION("Same password receives a different salted hash") {
+        auto second_hash =
+            srs::auth::PasswordHasher::hash_password(password);
+
+        REQUIRE(second_hash);
+        REQUIRE(second_hash.value() != nullptr);
+        REQUIRE(*second_hash.value() != stored_hash);
+    }
 }
