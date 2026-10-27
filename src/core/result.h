@@ -11,12 +11,12 @@ class Result;
 template <>
 class Result<void> {
 public:
-    static Result success() {
-        return Result(true, ErrorCode::INTERNAL_ERROR);
+    static Result<void> success() {
+        return Result<void>(true, ErrorCode::INTERNAL_ERROR);
     }
 
-    static Result failure(ErrorCode error) {
-        return Result(false, error);
+    static Result<void> failure(ErrorCode error) {
+        return Result<void>(false, error);
     }
 
     explicit operator bool() const {
