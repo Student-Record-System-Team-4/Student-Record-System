@@ -35,14 +35,6 @@ target_link_libraries(password_hasher
 
 enable_testing()
 
-add_executable(sample_test
-    tests/sample_test.cpp
-)
-
-target_link_libraries(sample_test
-    PRIVATE Catch2::Catch2WithMain
-)
-
 add_executable(test_password_hasher
     tests/test_password_hasher.cpp
 )
@@ -55,5 +47,4 @@ list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 
 include(Catch)
 
-catch_discover_tests(sample_test)
 catch_discover_tests(test_password_hasher)
