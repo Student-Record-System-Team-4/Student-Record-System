@@ -26,6 +26,11 @@ TEST_CASE("Username validation", "[validator][username]") {
         REQUIRE(result);
     }
 
+    SECTION("Accepts usernames with surrounding whitespace") {
+        auto result = Validator::validate_username(" student123 ");
+        REQUIRE(result);
+    }
+
     SECTION("Rejects embedded null characters") {
         const std::string username("student\0name", 12);
         auto result = Validator::validate_username(username);
@@ -41,8 +46,19 @@ TEST_CASE("Password validation", "[validator][password]") {
         REQUIRE(result.error() == ErrorCode::INVALID_INPUT);
     }
 
+    SECTION("Rejects an empty password") {
+        auto result = Validator::validate_password("");
+        REQUIRE_FALSE(result);
+        REQUIRE(result.error() == ErrorCode::INVALID_INPUT);
+    }
+
     SECTION("Accepts an eight-character password") {
         auto result = Validator::validate_password("Pass1234");
+        REQUIRE(result);
+    }
+
+    SECTION("Accepts passwords longer than the minimum length") {
+        auto result = Validator::validate_password("Pass12345");
         REQUIRE(result);
     }
 
