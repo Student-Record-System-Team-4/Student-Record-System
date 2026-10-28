@@ -14,6 +14,7 @@ enum class Role {
 enum class Permission {
     ViewOwnProfile,
     ViewOwnGrades,
+    ViewStudentGrades,
     ViewOwnAttendance,
     ViewOwnReports,
     EnterGrades,

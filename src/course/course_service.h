@@ -69,6 +69,8 @@ public:
         int semester = 0) const;
 
     // Queries for the grades / attendance modules (no session needed).
+    srs::core::Result<Course> get_course(const std::string& course_code) const;
+
     // semester == 0 means "any semester".
     bool is_enrolled(
         const std::string& srn,

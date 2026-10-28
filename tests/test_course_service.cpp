@@ -242,3 +242,13 @@ TEST_CASE("Roster can be filtered by semester", "[roster]") {
     REQUIRE(f.courses.view_roster(f.admin, "CS201", 5).value()->empty());
     REQUIRE(f.courses.view_roster(f.admin, "CS201").value()->size() == 2);
 }
+
+TEST_CASE("A course can be looked up by code", "[course]") {
+    Fixture f;
+    REQUIRE(f.courses.create_course(f.admin, course("CS201")));
+
+    const auto found = f.courses.get_course("CS201");
+    REQUIRE(found);
+    REQUIRE(found.value()->credits == 4);
+    REQUIRE(f.courses.get_course("NOPE").error() == ErrorCode::NOT_FOUND);
+}
