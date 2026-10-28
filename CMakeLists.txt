@@ -27,6 +27,7 @@ add_library(srs_core STATIC
     src/auth/password_hasher.cpp
     src/auth/user_accounts.cpp
     src/student/student_profiles.cpp
+    src/course/course_service.cpp
 )
 
 target_include_directories(
@@ -41,6 +42,7 @@ add_executable(test_validator
     tests/test_password_hasher.cpp
     tests/test_student_profiles.cpp
     tests/test_user_accounts.cpp
+    tests/test_course_service.cpp
 )
 
 target_link_libraries(test_validator PRIVATE
