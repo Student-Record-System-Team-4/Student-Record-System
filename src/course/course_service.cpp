@@ -206,6 +206,14 @@ Result<std::vector<RosterEntry>> CourseService::view_roster(
     return Result<Roster>::success(std::move(roster));
 }
 
+Result<Course> CourseService::get_course(const std::string& course_code) const {
+    const auto course = courses_.find(course_code);
+    if (course == courses_.end()) {
+        return Result<Course>::failure(ErrorCode::NOT_FOUND);
+    }
+    return Result<Course>::success(course->second);
+}
+
 bool CourseService::is_enrolled(
     const std::string& srn,
     const std::string& course_code,

@@ -23,6 +23,7 @@ bool AccessControl::is_allowed(Role role, Permission permission) {
                    permission == Permission::ManageCourses ||
                    permission == Permission::EnrollStudents ||
                    permission == Permission::ManageUsers ||
+                   permission == Permission::ViewStudentGrades ||
                    permission == Permission::ViewCourseRoster ||
                    permission == Permission::ViewCourseSummary ||
                    permission == Permission::GenerateInstitutionReports;

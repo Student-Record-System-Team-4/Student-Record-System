@@ -17,6 +17,7 @@ TEST_CASE("Students can only reach their own records", "[rbac]") {
     REQUIRE_FALSE(AccessControl::is_allowed(Role::Student, Permission::ViewCourseRoster));
     REQUIRE_FALSE(AccessControl::is_allowed(Role::Student, Permission::SearchStudents));
     REQUIRE_FALSE(AccessControl::is_allowed(Role::Student, Permission::ManageUsers));
+    REQUIRE_FALSE(AccessControl::is_allowed(Role::Student, Permission::ViewStudentGrades));
     REQUIRE_FALSE(AccessControl::is_allowed(Role::Student, Permission::GenerateInstitutionReports));
 }
 
@@ -28,6 +29,7 @@ TEST_CASE("Faculty can grade and mark attendance but not administer", "[rbac]") 
 
     REQUIRE_FALSE(AccessControl::is_allowed(Role::Faculty, Permission::ViewOwnGrades));
     REQUIRE_FALSE(AccessControl::is_allowed(Role::Faculty, Permission::ManageUsers));
+    REQUIRE_FALSE(AccessControl::is_allowed(Role::Faculty, Permission::ViewStudentGrades));
     REQUIRE_FALSE(AccessControl::is_allowed(Role::Faculty, Permission::ManageStudents));
     REQUIRE_FALSE(AccessControl::is_allowed(Role::Faculty, Permission::ManageCourses));
     REQUIRE_FALSE(AccessControl::is_allowed(Role::Faculty, Permission::GenerateInstitutionReports));
@@ -35,6 +37,7 @@ TEST_CASE("Faculty can grade and mark attendance but not administer", "[rbac]") 
 
 TEST_CASE("Admins administer the system but do not enter grades", "[rbac]") {
     REQUIRE(AccessControl::is_allowed(Role::Admin, Permission::ManageUsers));
+    REQUIRE(AccessControl::is_allowed(Role::Admin, Permission::ViewStudentGrades));
     REQUIRE(AccessControl::is_allowed(Role::Admin, Permission::ManageStudents));
     REQUIRE(AccessControl::is_allowed(Role::Admin, Permission::SearchStudents));
     REQUIRE(AccessControl::is_allowed(Role::Admin, Permission::ManageCourses));
