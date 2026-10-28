@@ -22,8 +22,10 @@ list(APPEND CMAKE_MODULE_PATH "${catch2_SOURCE_DIR}/extras")
 include(Catch)
 
 add_library(srs_core STATIC
+    src/auth/access_control.cpp
     src/auth/authentication.cpp
     src/auth/password_hasher.cpp
+    src/auth/user_accounts.cpp
     src/student/student_profiles.cpp
 )
 
@@ -34,9 +36,11 @@ target_include_directories(
 
 add_executable(test_validator
     tests/test_validator.cpp
+    tests/test_access_control.cpp
     tests/test_authentication.cpp
     tests/test_password_hasher.cpp
     tests/test_student_profiles.cpp
+    tests/test_user_accounts.cpp
 )
 
 target_link_libraries(test_validator PRIVATE
