@@ -13,25 +13,20 @@ struct UserRow {
     std::string username;
     std::string password_hash;
     std::string role;
-    bool active = true;
 };
 
 struct StudentRow {
     std::string srn;
-    std::string username;
     std::string name;
-    std::string date_of_birth;
-    std::string phone;
+    std::string email;
     std::string department;
     int semester = 0;
-    bool active = true;
 };
 
 struct CourseRow {
     std::string course_code;
     std::string course_name;
     int credits = 0;
-    std::string faculty_username;
 };
 
 struct EnrollmentRow {
@@ -43,20 +38,22 @@ struct EnrollmentRow {
 struct GradeRow {
     std::string srn;
     std::string course_code;
-    std::string letter;
     int semester = 0;
-    bool has_marks = false;
-    double marks = 0.0;
-    double grade_points = 0.0;
+    std::string grade;
 };
 
+/*
+ * Keep the fields in this exact order.
+ * attendance_service.cpp initializes AttendanceRow as:
+ * {srn, course_code, date, session_details, status, semester}
+ */
 struct AttendanceRow {
     std::string srn;
     std::string course_code;
-    int semester = 0;
     std::string date;
     std::string session_details;
     std::string status;
+    int semester = 0;
 };
 
 class UserRepository {
@@ -65,11 +62,7 @@ public:
         : database_(database) {}
 
     srs::core::Result<void> save(const UserRow& row);
-
     srs::core::Result<std::vector<UserRow>> all() const;
-
-    srs::core::Result<UserRow> find(
-        const std::string& username) const;
 
 private:
     Database& database_;
@@ -81,11 +74,7 @@ public:
         : database_(database) {}
 
     srs::core::Result<void> save(const StudentRow& row);
-
     srs::core::Result<std::vector<StudentRow>> all() const;
-
-    srs::core::Result<StudentRow> find(
-        const std::string& srn) const;
 
 private:
     Database& database_;
@@ -97,11 +86,7 @@ public:
         : database_(database) {}
 
     srs::core::Result<void> save(const CourseRow& row);
-
     srs::core::Result<std::vector<CourseRow>> all() const;
-
-    srs::core::Result<CourseRow> find(
-        const std::string& course_code) const;
 
 private:
     Database& database_;
@@ -113,7 +98,6 @@ public:
         : database_(database) {}
 
     srs::core::Result<void> save(const EnrollmentRow& row);
-
     srs::core::Result<std::vector<EnrollmentRow>> all() const;
 
 private:
@@ -126,7 +110,6 @@ public:
         : database_(database) {}
 
     srs::core::Result<void> save(const GradeRow& row);
-
     srs::core::Result<std::vector<GradeRow>> all() const;
 
 private:
@@ -139,7 +122,6 @@ public:
         : database_(database) {}
 
     srs::core::Result<void> save(const AttendanceRow& row);
-
     srs::core::Result<std::vector<AttendanceRow>> all() const;
 
 private:
