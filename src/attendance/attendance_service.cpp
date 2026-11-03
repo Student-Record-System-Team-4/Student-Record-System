@@ -3,6 +3,7 @@
 #include <cctype>
 #include <cmath>
 #include <utility>
+#include "persistence/repositories.h"
 
 namespace srs::attendance {
 
@@ -95,6 +96,27 @@ AttendanceService::AttendanceService(
               ? threshold
               : DEFAULT_THRESHOLD) {}
 
+AttendanceService::AttendanceService(
+    srs::auth::UserAccountService& accounts,
+    srs::auth::AuthenticationService& authentication,
+    srs::student::StudentProfileService& students,
+    srs::course::CourseService& courses,
+    srs::persistence::Database& database,
+    double threshold)
+    : AttendanceService(accounts, authentication, students, courses, threshold) {
+    database_ = &database;
+    srs::persistence::AttendanceRepository repository(database);
+    const auto rows = repository.all();
+    if (rows) for (const auto& row : *rows.value()) {
+        const auto status = row.status == "Present" ? AttendanceStatus::Present :
+            row.status == "Late" ? AttendanceStatus::Late : AttendanceStatus::Absent;
+        records_[Key(row.srn, row.course_code, row.semester, row.date,
+                     row.session_details)] =
+            {row.srn, row.course_code, row.semester, row.date,
+             row.session_details, status};
+    }
+}
+
 // Check faculty permission, course assignment and student enrolment.
 Result<void> AttendanceService::check_faculty_access(
     const std::string& session_id,
@@ -183,6 +205,14 @@ Result<void> AttendanceService::mark_attendance(
 
     // If the same session is entered again, update the existing record.
     records_[key] = std::move(record);
+    if (database_) {
+        srs::persistence::AttendanceRepository repository(*database_);
+        const char* status_name = status == AttendanceStatus::Present ? "Present" :
+            status == AttendanceStatus::Late ? "Late" : "Absent";
+        if (!repository.save({srn, course_code, date, session_details,
+                              status_name, semester}))
+            return Result<void>::failure(ErrorCode::INTERNAL_ERROR);
+    }
 
     return Result<void>::success();
 }

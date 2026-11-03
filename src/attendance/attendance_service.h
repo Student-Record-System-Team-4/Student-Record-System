@@ -11,6 +11,7 @@
 #include "core/result.h"
 #include "course/course_service.h"
 #include "student/student_profiles.h"
+#include "persistence/database.h"
 
 namespace srs::attendance {
 
@@ -48,6 +49,13 @@ public:
         srs::auth::AuthenticationService& authentication,
         srs::student::StudentProfileService& students,
         srs::course::CourseService& courses,
+        double threshold = DEFAULT_THRESHOLD);
+    AttendanceService(
+        srs::auth::UserAccountService& accounts,
+        srs::auth::AuthenticationService& authentication,
+        srs::student::StudentProfileService& students,
+        srs::course::CourseService& courses,
+        srs::persistence::Database& database,
         double threshold = DEFAULT_THRESHOLD);
 
     // F-017: Faculty records attendance.
@@ -107,6 +115,7 @@ private:
 
     double threshold_;
     std::map<Key, AttendanceRecord> records_;
+    srs::persistence::Database* database_ = nullptr;
 };
 
 }  // namespace srs::attendance

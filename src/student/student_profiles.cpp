@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include "persistence/repositories.h"
 
 namespace srs::student {
 namespace {
@@ -34,6 +35,17 @@ StudentProfileService::StudentProfileService(
     srs::auth::AuthenticationService& authentication)
     : authentication_(authentication) {}
 
+StudentProfileService::StudentProfileService(
+    srs::auth::AuthenticationService& authentication,
+    srs::persistence::Database& database)
+    : authentication_(authentication), database_(&database) {
+    srs::persistence::StudentRepository repository(database);
+    const auto rows = repository.all();
+    if (rows) for (const auto& row : *rows.value()) profiles_.push_back(
+        {row.username, row.name, row.srn, row.date_of_birth, row.contact,
+         row.programme, row.semester, row.active});
+}
+
 srs::core::Result<void> StudentProfileService::register_student(
     const StudentProfile& profile,
     UserRole requester) {
@@ -52,6 +64,17 @@ srs::core::Result<void> StudentProfileService::register_student(
     }
 
     profiles_.push_back(profile);
+    if (database_) {
+        srs::persistence::StudentRepository repository(*database_);
+        if (!repository.save({profile.srn, profile.username, profile.name,
+                              profile.date_of_birth, profile.contact,
+                              profile.programme, profile.semester,
+                              profile.active})) {
+            profiles_.pop_back();
+            return srs::core::Result<void>::failure(
+                srs::core::ErrorCode::INTERNAL_ERROR);
+        }
+    }
     return srs::core::Result<void>::success();
 }
 
@@ -71,6 +94,15 @@ srs::core::Result<void> StudentProfileService::update_student(
                     srs::core::ErrorCode::INVALID_INPUT);
             }
             existing = profile;
+            if (database_) {
+                srs::persistence::StudentRepository repository(*database_);
+                if (!repository.save({profile.srn, profile.username, profile.name,
+                                      profile.date_of_birth, profile.contact,
+                                      profile.programme, profile.semester,
+                                      profile.active}))
+                    return srs::core::Result<void>::failure(
+                        srs::core::ErrorCode::INTERNAL_ERROR);
+            }
             return srs::core::Result<void>::success();
         }
     }
@@ -89,6 +121,15 @@ srs::core::Result<void> StudentProfileService::deactivate_student(
     for (auto& profile : profiles_) {
         if (profile.srn == srn) {
             profile.active = false;
+            if (database_) {
+                srs::persistence::StudentRepository repository(*database_);
+                if (!repository.save({profile.srn, profile.username, profile.name,
+                                      profile.date_of_birth, profile.contact,
+                                      profile.programme, profile.semester,
+                                      profile.active}))
+                    return srs::core::Result<void>::failure(
+                        srs::core::ErrorCode::INTERNAL_ERROR);
+            }
             authentication_.set_user_active(profile.username, false);
             return srs::core::Result<void>::success();
         }

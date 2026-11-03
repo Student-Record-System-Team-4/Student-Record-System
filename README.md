@@ -38,6 +38,20 @@ The executable is written to
 `build\Release\student_record_system.exe` when using a Visual Studio
 generator.
 
+## Persistent storage
+
+The production executable initializes a SQLite database automatically. Pass a
+database path as its first argument, or it defaults to
+`student-record-system.db`:
+
+```powershell
+.\build\Release\student_record_system.exe .\data\students.db
+```
+
+The schema enables foreign keys and includes migrations, repositories, unique
+keys, and transaction support for users, student profiles, courses,
+enrollments, grades, attendance, and audit records.
+
 ## Documentation
 
 - [Software Requirements Specification](docs/SRS-Document.pdf)

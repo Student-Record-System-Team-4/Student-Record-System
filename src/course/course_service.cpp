@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include "persistence/repositories.h"
 
 namespace srs::course {
 
@@ -15,6 +16,25 @@ CourseService::CourseService(
     srs::auth::AuthenticationService& authentication,
     srs::student::StudentProfileService& students)
     : accounts_(accounts), authentication_(authentication), students_(students) {}
+
+CourseService::CourseService(
+    srs::auth::UserAccountService& accounts,
+    srs::auth::AuthenticationService& authentication,
+    srs::student::StudentProfileService& students,
+    srs::persistence::Database& database)
+    : CourseService(accounts, authentication, students) {
+    database_ = &database;
+    srs::persistence::CourseRepository course_repository(database);
+    const auto courses = course_repository.all();
+    if (courses) for (const auto& course : *courses.value())
+        courses_[course.code] = {course.code, course.title, course.credits,
+                                 course.faculty_username};
+    srs::persistence::EnrollmentRepository enrollment_repository(database);
+    const auto enrollments = enrollment_repository.all();
+    if (enrollments) for (const auto& enrollment : *enrollments.value())
+        enrollments_.push_back({enrollment.srn, enrollment.course_code,
+                                enrollment.semester});
+}
 
 bool CourseService::valid_course(const Course& course) {
     if (course.code.size() < 2 || course.code.size() > 16) {
@@ -83,6 +103,12 @@ Result<void> CourseService::create_course(
         return Result<void>::failure(ErrorCode::ALREADY_EXISTS);
     }
     courses_[course.code] = course;
+    if (database_) {
+        srs::persistence::CourseRepository repository(*database_);
+        if (!repository.save({course.code, course.title, course.credits,
+                              course.faculty_username}))
+            return Result<void>::failure(ErrorCode::INTERNAL_ERROR);
+    }
     return Result<void>::success();
 }
 
@@ -101,6 +127,12 @@ Result<void> CourseService::update_course(
         return Result<void>::failure(ErrorCode::NOT_FOUND);
     }
     existing->second = course;
+    if (database_) {
+        srs::persistence::CourseRepository repository(*database_);
+        if (!repository.save({course.code, course.title, course.credits,
+                              course.faculty_username}))
+            return Result<void>::failure(ErrorCode::INTERNAL_ERROR);
+    }
     return Result<void>::success();
 }
 
@@ -156,6 +188,11 @@ Result<void> CourseService::enroll_student(
         return Result<void>::failure(ErrorCode::ALREADY_EXISTS);
     }
     enrollments_.push_back({srn, course_code, semester});
+    if (database_) {
+        srs::persistence::EnrollmentRepository repository(*database_);
+        if (!repository.save({srn, course_code, semester}))
+            return Result<void>::failure(ErrorCode::INTERNAL_ERROR);
+    }
     return Result<void>::success();
 }
 
