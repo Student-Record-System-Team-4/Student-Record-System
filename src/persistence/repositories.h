@@ -13,7 +13,12 @@ struct StudentRow {
     std::string srn, username, name, date_of_birth, contact, programme;
     int semester = 0; bool active = true;
 };
-struct CourseRow { std::string code, title; int credits = 0; std::string faculty_username; };
+struct CourseRow {
+    std::string code, title;
+    int credits = 0;
+    std::string faculty_username;
+    bool active = true;
+};
 struct EnrollmentRow { std::string srn, course_code; int semester = 0; };
 struct GradeRow {
     std::string srn, course_code, letter; int semester = 0;
