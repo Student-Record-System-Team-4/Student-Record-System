@@ -20,7 +20,6 @@ using srs::attendance::AttendanceService;
 using srs::attendance::AttendanceStatus;
 using srs::student::StudentProfile;
 using srs::student::StudentProfileService;
-using srs::student::UserRole;
 
 namespace {
 
@@ -45,23 +44,23 @@ struct AttendanceFixture {
     std::string student2;
 
     AttendanceFixture() {
+        admin = login("admin01", "Admin1234");
         REQUIRE(students.register_student(
+            admin,
             StudentProfile{
                 "student01", "Alice Smith", "SRN-001",
                 "2005-01-01", "555-0100",
                 "Computer Science", 3, true
-            },
-            UserRole::Admin));
+            }));
 
         REQUIRE(students.register_student(
+            admin,
             StudentProfile{
                 "student02", "Bob Jones", "SRN-002",
                 "2005-02-02", "555-0101",
                 "Computer Science", 3, true
-            },
-            UserRole::Admin));
+            }));
 
-        admin = login("admin01", "Admin1234");
         faculty1 = login("faculty01", "Teach1234");
         faculty2 = login("faculty02", "Teach5678");
         student1 = login("student01", "Pass1234");
