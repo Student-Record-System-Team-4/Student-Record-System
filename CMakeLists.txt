@@ -1,4 +1,3 @@
-
 cmake_minimum_required(VERSION 3.20)
 
 project(StudentRecordSystemCore LANGUAGES C CXX)
@@ -9,7 +8,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 include(CTest)
 include(FetchContent)
+
+# SQLite
 find_package(SQLite3 QUIET)
+
 if (SQLite3_FOUND)
     set(SRS_SQLITE_TARGET SQLite::SQLite3)
 else()
@@ -18,12 +20,22 @@ else()
         URL https://www.sqlite.org/2024/sqlite-amalgamation-3460100.zip
         DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     )
+
     FetchContent_MakeAvailable(sqlite3)
-    add_library(srs_sqlite STATIC ${sqlite3_SOURCE_DIR}/sqlite3.c)
-    target_include_directories(srs_sqlite PUBLIC ${sqlite3_SOURCE_DIR})
+
+    add_library(srs_sqlite STATIC
+        ${sqlite3_SOURCE_DIR}/sqlite3.c
+    )
+
+    target_include_directories(
+        srs_sqlite
+        PUBLIC ${sqlite3_SOURCE_DIR}
+    )
+
     set(SRS_SQLITE_TARGET srs_sqlite)
 endif()
 
+# Catch2
 FetchContent_Declare(
     Catch2
     GIT_REPOSITORY https://github.com/catchorg/Catch2.git
@@ -35,6 +47,7 @@ FetchContent_MakeAvailable(Catch2)
 list(APPEND CMAKE_MODULE_PATH "${catch2_SOURCE_DIR}/extras")
 include(Catch)
 
+# Core library
 add_library(srs_core STATIC
     src/core/application.cpp
     src/auth/access_control.cpp
@@ -54,14 +67,22 @@ target_include_directories(
     PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-target_link_libraries(srs_core PUBLIC ${SRS_SQLITE_TARGET})
+target_link_libraries(
+    srs_core
+    PUBLIC ${SRS_SQLITE_TARGET}
+)
 
+# Application executable
 add_executable(student_record_system
     src/main.cpp
 )
 
-target_link_libraries(student_record_system PRIVATE srs_core)
+target_link_libraries(
+    student_record_system
+    PRIVATE srs_core
+)
 
+# Test executable
 add_executable(test_validator
     tests/test_validator.cpp
     tests/test_access_control.cpp
@@ -70,16 +91,23 @@ add_executable(test_validator
     tests/test_student_profiles.cpp
     tests/test_user_accounts.cpp
     tests/test_course_service.cpp
-    tests/test_grade_service.cpp     
+    tests/test_grade_service.cpp
     tests/test_attendance_service.cpp
     tests/application_test.cpp
     tests/sample_test.cpp
     tests/test_persistence.cpp
+    tests/course_management_test.cpp
 )
 
-target_link_libraries(test_validator PRIVATE
-    srs_core
-    Catch2::Catch2WithMain
+target_link_libraries(
+    test_validator
+    PRIVATE
+        srs_core
+        Catch2::Catch2WithMain
 )
 
-add_test(NAME test_validator COMMAND test_validator)
+# Register tests with CTest
+add_test(
+    NAME test_validator
+    COMMAND test_validator
+)
