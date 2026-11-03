@@ -1,0 +1,67 @@
+Guys, follow these steps for every issue:
+
+**1. Pick an issue**
+- Go to the GitHub Issues tab.
+- Choose an unassigned issue and assign it to yourself.
+- Check that nobody else is working on the same functionality.
+
+**2. Update your local repository**
+
+```bash
+git switch main
+git pull origin main
+git switch -c feature/issue-<number>-short-name
+```
+
+Replace `<number>` and `short-name` with the issue number and a short description.
+
+**3. Implement the issue**
+- Use VS Code Copilot or another coding agent if helpful.
+- Follow the SRS and existing project structure.
+- Don't modify unrelated files or work directly on `main`.
+
+**4. Write tests**
+- Add unit tests for the functionality and relevant edge cases.
+- Make sure the tests are registered with CTest.
+- Run the tests locally and fix failures before pushing.
+
+**5. Build and verify**
+
+```bash
+cmake --build build
+ctest --test-dir build --output-on-failure
+git diff --check
+```
+
+If the project changes require CMake reconfiguration, configure it first using the appropriate generator for your machine.
+
+**6. Commit and push**
+
+```bash
+git add <relevant-files>
+git commit -m "Implement issue #<number>: short description"
+git push -u origin feature/issue-<number>-short-name
+```
+
+**7. Open a pull request**
+- Open a PR from your feature branch into `main`.
+- Use a descriptive title, e.g. `Implement login validation (fixes #12)`.
+- Explain what changed and which tests you ran.
+- Link the corresponding issue using `Fixes #<number>` in the PR description if the PR fully resolves it.
+
+**8. Wait for GitHub Actions**
+- Check that both Ubuntu and Windows builds and tests pass.
+- If CI fails, inspect the logs, fix the problem, push another commit, and wait for the new run.
+- Don't merge while required checks are failing.
+
+**9. Review and merge**
+- Get the required review if the repository rules demand one.
+- Merge the PR only after checks and review requirements are satisfied.
+- Confirm the issue closes and the changes are on `main`.
+
+**10. Start the next issue**
+- Switch back to `main` and pull the latest changes before creating the next branch.
+
+Our priority is to get GitHub Actions and the pipeline working reliably, so coordinate before changing shared build files or `.github/workflows/ci.yml`.
+
+Aim for at least two completed issues per person, but prioritize working, tested code over the issue count.

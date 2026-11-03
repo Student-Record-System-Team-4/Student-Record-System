@@ -7,6 +7,7 @@
 #include "auth/authentication.h"
 #include "core/result.h"
 #include "core/validator.h"
+#include "persistence/database.h"
 
 namespace srs::student {
 
@@ -37,6 +38,9 @@ struct StudentSearchQuery {
 class StudentProfileService {
 public:
     explicit StudentProfileService(srs::auth::AuthenticationService& authentication);
+    StudentProfileService(
+        srs::auth::AuthenticationService& authentication,
+        srs::persistence::Database& database);
 
     srs::core::Result<void> register_student(
         const StudentProfile& profile,
@@ -67,6 +71,7 @@ private:
 
     srs::auth::AuthenticationService& authentication_;
     std::vector<StudentProfile> profiles_;
+    srs::persistence::Database* database_ = nullptr;
 };
 
 }  // namespace srs::student

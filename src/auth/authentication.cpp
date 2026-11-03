@@ -5,6 +5,7 @@
 
 #include "auth/password_hasher.h"
 #include "core/validator.h"
+#include "persistence/repositories.h"
 
 namespace srs::auth {
 
@@ -21,6 +22,37 @@ AuthenticationService::AuthenticationService(
                 *password_hash.value();
             active_users_[username] = true;
             roles_[username] = user.role;
+        }
+    }
+
+}
+
+AuthenticationService::AuthenticationService(
+    std::vector<User> registered_users,
+    srs::persistence::Database& database)
+    : AuthenticationService(std::move(registered_users)) {
+    database_ = &database;
+    srs::persistence::UserRepository repository(database);
+    const auto stored = repository.all();
+    if (stored && !stored.value()->empty()) {
+        password_hashes_.clear();
+        active_users_.clear();
+        roles_.clear();
+        for (const auto& user : *stored.value()) {
+            password_hashes_[user.username] = user.password_hash;
+            active_users_[user.username] = user.active;
+            roles_[user.username] =
+                user.role == "Admin" ? Role::Admin :
+                user.role == "Faculty" ? Role::Faculty : Role::Student;
+        }
+    } else {
+        for (const auto& user : registered_users) {
+            const auto hash = password_hashes_.find(user.username);
+            if (hash != password_hashes_.end()) {
+                repository.save({user.username, hash->second,
+                    user.role == Role::Admin ? "Admin" :
+                    user.role == Role::Faculty ? "Faculty" : "Student", true});
+            }
         }
     }
 }
@@ -75,6 +107,13 @@ bool AuthenticationService::set_user_active(
         return false;
     }
     user->second = active;
+    if (database_) {
+        srs::persistence::UserRepository repository(*database_);
+        const auto current = repository.find(username);
+        if (current) repository.save({username, current.value()->password_hash,
+            roles_[username] == Role::Admin ? "Admin" :
+            roles_[username] == Role::Faculty ? "Faculty" : "Student", active});
+    }
     if (!active) {
         end_sessions_for(username);
     }
@@ -98,6 +137,12 @@ srs::core::Result<void> AuthenticationService::add_user(const User& user) {
     password_hashes_[user.username] = *password_hash.value();
     active_users_[user.username] = true;
     roles_[user.username] = user.role;
+    if (database_) {
+        srs::persistence::UserRepository repository(*database_);
+        repository.save({user.username, *password_hash.value(),
+            user.role == Role::Admin ? "Admin" :
+            user.role == Role::Faculty ? "Faculty" : "Student", true});
+    }
     return Result<void>::success();
 }
 
@@ -110,6 +155,16 @@ srs::core::Result<void> AuthenticationService::set_role(
             srs::core::ErrorCode::NOT_FOUND);
     }
     entry->second = role;
+    if (database_) {
+        srs::persistence::UserRepository repository(*database_);
+        const auto current = repository.find(username);
+        if (current) {
+            repository.save({username, current.value()->password_hash,
+                role == Role::Admin ? "Admin" :
+                role == Role::Faculty ? "Faculty" : "Student",
+                current.value()->active});
+        }
+    }
     return srs::core::Result<void>::success();
 }
 
@@ -125,6 +180,12 @@ srs::core::Result<void> AuthenticationService::set_password(
         return srs::core::Result<void>::failure(password_hash.error());
     }
     password_hashes_[username] = *password_hash.value();
+    if (database_) {
+        srs::persistence::UserRepository repository(*database_);
+        const auto current = repository.find(username);
+        if (current) repository.save({username, *password_hash.value(),
+            current.value()->role, current.value()->active});
+    }
     return srs::core::Result<void>::success();
 }
 

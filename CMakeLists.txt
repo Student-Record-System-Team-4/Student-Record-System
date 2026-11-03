@@ -1,7 +1,7 @@
 
 cmake_minimum_required(VERSION 3.20)
 
-project(StudentRecordSystemCore LANGUAGES CXX)
+project(StudentRecordSystemCore LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -9,6 +9,20 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 include(CTest)
 include(FetchContent)
+find_package(SQLite3 QUIET)
+if (SQLite3_FOUND)
+    set(SRS_SQLITE_TARGET SQLite::SQLite3)
+else()
+    FetchContent_Declare(
+        sqlite3
+        URL https://www.sqlite.org/2024/sqlite-amalgamation-3460100.zip
+        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+    )
+    FetchContent_MakeAvailable(sqlite3)
+    add_library(srs_sqlite STATIC ${sqlite3_SOURCE_DIR}/sqlite3.c)
+    target_include_directories(srs_sqlite PUBLIC ${sqlite3_SOURCE_DIR})
+    set(SRS_SQLITE_TARGET srs_sqlite)
+endif()
 
 FetchContent_Declare(
     Catch2
@@ -22,6 +36,7 @@ list(APPEND CMAKE_MODULE_PATH "${catch2_SOURCE_DIR}/extras")
 include(Catch)
 
 add_library(srs_core STATIC
+    src/core/application.cpp
     src/auth/access_control.cpp
     src/auth/authentication.cpp
     src/auth/password_hasher.cpp
@@ -29,12 +44,23 @@ add_library(srs_core STATIC
     src/student/student_profiles.cpp
     src/course/course_service.cpp
     src/grades/grade_service.cpp
+    src/attendance/attendance_service.cpp
+    src/persistence/database.cpp
+    src/persistence/repositories.cpp
 )
 
 target_include_directories(
     srs_core
     PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
+
+target_link_libraries(srs_core PUBLIC ${SRS_SQLITE_TARGET})
+
+add_executable(student_record_system
+    src/main.cpp
+)
+
+target_link_libraries(student_record_system PRIVATE srs_core)
 
 add_executable(test_validator
     tests/test_validator.cpp
@@ -45,6 +71,10 @@ add_executable(test_validator
     tests/test_user_accounts.cpp
     tests/test_course_service.cpp
     tests/test_grade_service.cpp     
+    tests/test_attendance_service.cpp
+    tests/application_test.cpp
+    tests/sample_test.cpp
+    tests/test_persistence.cpp
 )
 
 target_link_libraries(test_validator PRIVATE
@@ -52,4 +82,4 @@ target_link_libraries(test_validator PRIVATE
     Catch2::Catch2WithMain
 )
 
-catch_discover_tests(test_validator)
+add_test(NAME test_validator COMMAND test_validator)

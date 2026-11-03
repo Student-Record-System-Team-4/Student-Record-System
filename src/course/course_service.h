@@ -9,6 +9,7 @@
 #include "auth/user_accounts.h"
 #include "core/result.h"
 #include "student/student_profiles.h"
+#include "persistence/database.h"
 
 namespace srs::course {
 
@@ -39,6 +40,11 @@ public:
         srs::auth::UserAccountService& accounts,
         srs::auth::AuthenticationService& authentication,
         srs::student::StudentProfileService& students);
+    CourseService(
+        srs::auth::UserAccountService& accounts,
+        srs::auth::AuthenticationService& authentication,
+        srs::student::StudentProfileService& students,
+        srs::persistence::Database& database);
 
     // Admin only (ManageCourses).
     srs::core::Result<void> create_course(
@@ -98,6 +104,7 @@ private:
     srs::student::StudentProfileService& students_;
     std::map<std::string, Course> courses_;
     std::vector<Enrollment> enrollments_;
+    srs::persistence::Database* database_ = nullptr;
 };
 
 }  // namespace srs::course

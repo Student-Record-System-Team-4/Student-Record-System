@@ -2,6 +2,7 @@
 
 #include <cctype>
 #include <cmath>
+#include "persistence/repositories.h"
 
 namespace srs::grades {
 
@@ -58,6 +59,21 @@ GradeService::GradeService(
       students_(students),
       courses_(courses) {}
 
+GradeService::GradeService(
+    srs::auth::UserAccountService& accounts,
+    srs::auth::AuthenticationService& authentication,
+    srs::student::StudentProfileService& students,
+    srs::course::CourseService& courses,
+    srs::persistence::Database& database)
+    : GradeService(accounts, authentication, students, courses) {
+    database_ = &database;
+    srs::persistence::GradeRepository repository(database);
+    const auto rows = repository.all();
+    if (rows) for (const auto& row : *rows.value())
+        grades_[Key(row.srn, row.course_code, row.semester)] =
+            {row.has_marks, row.marks, row.letter, row.grade_points};
+}
+
 Result<void> GradeService::check_entry(
     const std::string& session_id,
     const std::string& srn,
@@ -103,6 +119,12 @@ Result<void> GradeService::enter_marks(
     const auto points = GradeScale::points_for_letter(letter);
     grades_[Key(srn, course_code, semester)] =
         StoredGrade{true, marks, letter, *points.value()};
+    if (database_) {
+        srs::persistence::GradeRepository repository(*database_);
+        if (!repository.save({srn, course_code, letter, semester, true, marks,
+                              *points.value()}))
+            return Result<void>::failure(ErrorCode::INTERNAL_ERROR);
+    }
     return Result<void>::success();
 }
 
@@ -122,6 +144,12 @@ Result<void> GradeService::enter_letter_grade(
     }
     grades_[Key(srn, course_code, semester)] =
         StoredGrade{false, 0.0, GradeScale::normalize_letter(letter), *points.value()};
+    if (database_) {
+        srs::persistence::GradeRepository repository(*database_);
+        if (!repository.save({srn, course_code, GradeScale::normalize_letter(letter),
+                              semester, false, 0.0, *points.value()}))
+            return Result<void>::failure(ErrorCode::INTERNAL_ERROR);
+    }
     return Result<void>::success();
 }
 
