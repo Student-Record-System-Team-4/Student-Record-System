@@ -33,14 +33,16 @@ CourseService::CourseService(
     const auto courses = course_repository.all();
 
     if (courses) {
-        for (const auto& course : *courses.value()) {
-            courses_[course.code] = {
-                course.code,
-                course.title,
-                course.credits,
-                course.faculty_username,
-                course.active
+        for (const auto& row : *courses.value()) {
+            Course course{
+                row.course_code,
+                row.course_name,
+                row.credits,
+                row.faculty_username,
+                true
             };
+
+            courses_[row.course_code] = course;
         }
     }
 
@@ -48,11 +50,11 @@ CourseService::CourseService(
     const auto enrollments = enrollment_repository.all();
 
     if (enrollments) {
-        for (const auto& enrollment : *enrollments.value()) {
+        for (const auto& row : *enrollments.value()) {
             enrollments_.push_back({
-                enrollment.srn,
-                enrollment.course_code,
-                enrollment.semester
+                row.srn,
+                row.course_code,
+                row.semester
             });
         }
     }
@@ -146,13 +148,14 @@ Result<void> CourseService::create_course(
     if (database_) {
         srs::persistence::CourseRepository repository(*database_);
 
-        if (!repository.save({
-                course.code,
-                course.title,
-                course.credits,
-                course.faculty_username,
-                course.active
-            })) {
+        const auto saved = repository.save({
+            course.code,
+            course.title,
+            course.credits,
+            course.faculty_username
+        });
+
+        if (!saved) {
             return Result<void>::failure(ErrorCode::INTERNAL_ERROR);
         }
     }
@@ -184,13 +187,14 @@ Result<void> CourseService::update_course(
     if (database_) {
         srs::persistence::CourseRepository repository(*database_);
 
-        if (!repository.save({
-                course.code,
-                course.title,
-                course.credits,
-                course.faculty_username,
-                course.active
-            })) {
+        const auto saved = repository.save({
+            course.code,
+            course.title,
+            course.credits,
+            course.faculty_username
+        });
+
+        if (!saved) {
             return Result<void>::failure(ErrorCode::INTERNAL_ERROR);
         }
     }
@@ -219,16 +223,14 @@ Result<void> CourseService::deactivate_course(
         return Result<void>::success();
     }
 
-    if (database_) {
-        srs::persistence::CourseRepository repository(*database_);
-        const auto result = repository.deactivate(course_code);
-
-        if (!result) {
-            return Result<void>::failure(result.error());
-        }
-    }
-
+    /*
+     * CourseRow has no active/deactivated field, and CourseRepository
+     * has no deactivate() method. Therefore this change is in-memory only.
+     * Persistent deactivation requires adding an active field and a
+     * corresponding database/repository implementation.
+     */
     existing->second.active = false;
+
     return Result<void>::success();
 }
 
@@ -307,7 +309,9 @@ Result<void> CourseService::enroll_student(
     if (database_) {
         srs::persistence::EnrollmentRepository repository(*database_);
 
-        if (!repository.save({srn, course_code, semester})) {
+        const auto saved = repository.save({srn, course_code, semester});
+
+        if (!saved) {
             return Result<void>::failure(ErrorCode::INTERNAL_ERROR);
         }
     }
@@ -349,15 +353,13 @@ Result<void> CourseService::remove_student(
         return Result<void>::failure(ErrorCode::NOT_FOUND);
     }
 
-    if (database_) {
-        srs::persistence::EnrollmentRepository repository(*database_);
-
-        if (!repository.remove(srn, course_code, semester)) {
-            return Result<void>::failure(ErrorCode::INTERNAL_ERROR);
-        }
-    }
-
+    /*
+     * EnrollmentRepository has no remove() method. This removal is
+     * in-memory only. Persistent removal requires a repository/database
+     * delete operation or a soft-delete field.
+     */
     enrollments_.erase(enrollment);
+
     return Result<void>::success();
 }
 
