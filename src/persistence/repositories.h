@@ -132,54 +132,7 @@ public:
 private:
     Database& database_;
 };
-TEST_CASE("Grades persist and reload after reopening SQLite database",
-          "[persistence][grades]") {
-    std::remove(test_database);
-
-    {
-        srs::persistence::Database database(test_database);
-        REQUIRE(database.is_open());
-
-        srs::persistence::UserRepository users(database);
-        srs::persistence::StudentRepository students(database);
-        srs::persistence::CourseRepository courses(database);
-        srs::persistence::EnrollmentRepository enrollments(database);
-        srs::persistence::GradeRepository grades(database);
-
-        REQUIRE(users.save({"student01", "hash", "Student", true}));
-        REQUIRE(students.save({"SRN-001", "student01", "Alice",
-                               "2005-01-01", "555", "CS", 3, true}));
-        REQUIRE(courses.save({"CS101", "Programming", 4, "student01"}));
-        REQUIRE(enrollments.save({"SRN-001", "CS101", 3}));
-
-        REQUIRE(grades.save({
-            "SRN-001", "CS101", "A", 3, true, 85.0, 9.0
-        }));
-    }
-
-    {
-        srs::persistence::Database database(test_database);
-        REQUIRE(database.is_open());
-
-        srs::persistence::GradeRepository grades(database);
-        const auto rows = grades.all();
-
-        REQUIRE(rows);
-        REQUIRE(rows.value().size() == 1);
-
-        const auto& grade = rows.value().front();
-        REQUIRE(grade.srn == "SRN-001");
-        REQUIRE(grade.course_code == "CS101");
-        REQUIRE(grade.semester == 3);
-        REQUIRE(grade.letter == "A");
-        REQUIRE(grade.has_marks);
-        REQUIRE(grade.marks == 85.0);
-        REQUIRE(grade.grade_points == 9.0);
-    }
-
-    std::remove(test_database);
-}
 
 }  // namespace srs::persistence
 
-#endif
+#endif  // STUDENT_RECORD_SYSTEM_PERSISTENCE_REPOSITORIES_H
