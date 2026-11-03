@@ -30,8 +30,6 @@ struct RosterEntry {
 // SRS-F-010 (courses), F-011 (enrolment), F-012 (rosters).
 // Every call is identified by the caller's session id and is checked against
 // the role -> permission matrix before it does anything.
-// Admin only. Deactivates a course without deleting its records.
-
 class CourseService {
 public:
     static constexpr int MIN_CREDITS = 1;
@@ -62,7 +60,9 @@ public:
     // Admin: every course. Faculty: only the courses assigned to them.
     srs::core::Result<std::vector<Course>> list_courses(
         const std::string& session_id) const;
-   // Admin only. Deactivates a course without deleting its records.
+
+    // Admin only (ManageCourses). Deactivates a course without deleting its
+    // records; an inactive course rejects new enrollments.
     srs::core::Result<void> deactivate_course(
         const std::string& session_id,
         const std::string& course_code);
@@ -73,11 +73,13 @@ public:
         const std::string& srn,
         const std::string& course_code,
         int semester);
-     // Admin only. Removes a student's enrollment from a course.
+
+    // Admin only (EnrollStudents). Removes a student's enrollment.
     srs::core::Result<void> remove_student(
         const std::string& session_id,
         const std::string& srn,
-        const std::string& course_code,int semester);
+        const std::string& course_code,
+        int semester);
 
     // Admin: any course. Faculty: only their assigned courses.
     // semester == 0 returns every semester. Sorted by SRN.
@@ -119,7 +121,6 @@ private:
     std::vector<Enrollment> enrollments_;
     srs::persistence::Database* database_ = nullptr;
 };
-
 
 }  // namespace srs::course
 
