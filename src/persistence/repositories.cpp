@@ -26,7 +26,8 @@ bool prepare(Database& database, const char* sql, Statement& statement) {
                sql,
                -1,
                &statement.value,
-               nullptr) == SQLITE_OK;
+               nullptr
+           ) == SQLITE_OK;
 }
 
 void text(sqlite3_stmt* statement, int index, const std::string& value) {
@@ -35,7 +36,8 @@ void text(sqlite3_stmt* statement, int index, const std::string& value) {
         index,
         value.c_str(),
         -1,
-        SQLITE_TRANSIENT);
+        SQLITE_TRANSIENT
+    );
 }
 
 void integer(sqlite3_stmt* statement, int index, int value) {
@@ -144,7 +146,8 @@ Result<std::vector<UserRow>> UserRepository::all() const {
             "FROM users ORDER BY username;",
             s)) {
         return Result<std::vector<UserRow>>::failure(
-            ErrorCode::INTERNAL_ERROR);
+            ErrorCode::INTERNAL_ERROR
+        );
     }
 
     std::vector<UserRow> rows;
@@ -236,7 +239,8 @@ Result<std::vector<StudentRow>> StudentRepository::all() const {
             "semester,active FROM student_profiles ORDER BY srn;",
             s)) {
         return Result<std::vector<StudentRow>>::failure(
-            ErrorCode::INTERNAL_ERROR);
+            ErrorCode::INTERNAL_ERROR
+        );
     }
 
     std::vector<StudentRow> rows;
@@ -337,7 +341,8 @@ Result<std::vector<CourseRow>> CourseRepository::all() const {
             "FROM courses ORDER BY code;",
             s)) {
         return Result<std::vector<CourseRow>>::failure(
-            ErrorCode::INTERNAL_ERROR);
+            ErrorCode::INTERNAL_ERROR
+        );
     }
 
     std::vector<CourseRow> rows;
@@ -381,7 +386,6 @@ Result<void> EnrollmentRepository::remove(
     const std::string& srn,
     const std::string& course_code,
     int semester) {
-
     Statement s;
 
     if (!prepare(
@@ -408,7 +412,8 @@ Result<std::vector<EnrollmentRow>> EnrollmentRepository::all() const {
             "ORDER BY srn,course_code,semester;",
             s)) {
         return Result<std::vector<EnrollmentRow>>::failure(
-            ErrorCode::INTERNAL_ERROR);
+            ErrorCode::INTERNAL_ERROR
+        );
     }
 
     std::vector<EnrollmentRow> rows;
@@ -465,7 +470,8 @@ Result<std::vector<GradeRow>> GradeRepository::all() const {
             "grade_points FROM grades ORDER BY srn,course_code,semester;",
             s)) {
         return Result<std::vector<GradeRow>>::failure(
-            ErrorCode::INTERNAL_ERROR);
+            ErrorCode::INTERNAL_ERROR
+        );
     }
 
     std::vector<GradeRow> rows;
@@ -523,7 +529,8 @@ Result<std::vector<AttendanceRow>> AttendanceRepository::all() const {
             "ORDER BY srn,course_code,semester,date,session_details;",
             s)) {
         return Result<std::vector<AttendanceRow>>::failure(
-            ErrorCode::INTERNAL_ERROR);
+            ErrorCode::INTERNAL_ERROR
+        );
     }
 
     std::vector<AttendanceRow> rows;
@@ -551,7 +558,7 @@ Result<void> AuditRepository::append(const AuditRow& row) {
 
     if (!prepare(
             database_,
-            "INSERT INTO audit_log("
+            "INSERT INTO audit_records("
             "username,action,entity,entity_id,details"
             ") VALUES(?,?,?,?,?);",
             s)) {
