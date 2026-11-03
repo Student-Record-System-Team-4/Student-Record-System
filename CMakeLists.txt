@@ -91,6 +91,7 @@ add_executable(test_validator
     tests/test_student_profiles.cpp
     tests/test_user_accounts.cpp
     tests/test_course_service.cpp
+    tests/test_course_persistence.cpp
     tests/test_grade_service.cpp
     tests/test_attendance_service.cpp
     tests/application_test.cpp
