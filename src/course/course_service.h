@@ -62,6 +62,10 @@ public:
     // Admin: every course. Faculty: only the courses assigned to them.
     srs::core::Result<std::vector<Course>> list_courses(
         const std::string& session_id) const;
+   // Admin only. Deactivates a course without deleting its records.
+    srs::core::Result<void> deactivate_course(
+        const std::string& session_id,
+        const std::string& course_code);
 
     // Admin only (EnrollStudents). The student must be registered and active.
     srs::core::Result<void> enroll_student(
@@ -69,6 +73,11 @@ public:
         const std::string& srn,
         const std::string& course_code,
         int semester);
+     // Admin only. Removes a student's enrollment from a course.
+    srs::core::Result<void> remove_student(
+        const std::string& session_id,
+        const std::string& srn,
+        const std::string& course_code,int semester);
 
     // Admin: any course. Faculty: only their assigned courses.
     // semester == 0 returns every semester. Sorted by SRN.
@@ -110,10 +119,7 @@ private:
     std::vector<Enrollment> enrollments_;
     srs::persistence::Database* database_ = nullptr;
 };
-// Admin only. Deactivates a course without deleting its records.
-srs::core::Result<void> deactivate_course(
-    const std::string& session_id,
-    const std::string& course_code);
+
 
 }  // namespace srs::course
 
