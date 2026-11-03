@@ -47,3 +47,4 @@ TEST_CASE("SQLite constraints reject invalid relationships and duplicates", "[pe
     REQUIRE(users.save({"admin", "hash2", "Admin", true}));
     std::remove(test_database);
 }
+
