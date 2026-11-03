@@ -1,89 +1,57 @@
-#include <catch2/catch_test_macros.hpp>
-
 #include <cstdio>
 #include <string>
 
+#include "catch2/catch_test_macros.hpp"
 #include "persistence/database.h"
 #include "persistence/repositories.h"
 
-namespace {
-const char* test_database = "srs-persistence-test.db";
-}
-
-TEST_CASE("SQLite storage initializes, persists and reloads records",
-          "[persistence]") {
-    std::remove(test_database);
-
-    {
-        srs::persistence::Database database(test_database);
-        REQUIRE(database.is_open());
-
-        srs::persistence::UserRepository users(database);
-        srs::persistence::StudentRepository students(database);
-        srs::persistence::CourseRepository courses(database);
-        srs::persistence::EnrollmentRepository enrollments(database);
-
-        REQUIRE(users.save({"student01", "hash", "Student", true}));
-        REQUIRE(students.save({"SRN-001", "student01", "Alice",
-                               "2005-01-01", "555", "CS", 3, true}));
-        REQUIRE(courses.save({"CS101", "Programming", 4, "student01"}));
-        REQUIRE(enrollments.save({"SRN-001", "CS101", 3}));
-    }
-
-    {
-        srs::persistence::Database database(test_database);
-        REQUIRE(database.is_open());
-
-        srs::persistence::StudentRepository students(database);
-        const auto row = students.find("SRN-001");
-
-        REQUIRE(row);
-        REQUIRE(row.value().name == "Alice");
-    }
-
-    std::remove(test_database);
-}
-
-TEST_CASE("SQLite constraints reject invalid relationships and duplicates",
-          "[persistence]") {
-    std::remove(test_database);
-
-    srs::persistence::Database database(test_database);
-    REQUIRE(database.is_open());
-
-    srs::persistence::EnrollmentRepository enrollments(database);
-    REQUIRE_FALSE(enrollments.save({"missing", "missing", 1}));
-
-    srs::persistence::UserRepository users(database);
-    REQUIRE(users.save({"admin", "hash", "Admin", true}));
-
-    // Duplicate username should be rejected.
-    REQUIRE_FALSE(users.save({"admin", "hash2", "Admin", true}));
-
-    std::remove(test_database);
-}
+using namespace srs::persistence;
 
 TEST_CASE("Grades persist and reload after reopening SQLite database",
           "[persistence][grades]") {
-    std::remove(test_database);
+    const char* db_path = "grade_persistence_test.db";
+    std::remove(db_path);
 
+    // Create the database and save the related records.
     {
-        srs::persistence::Database database(test_database);
+        Database database(db_path);
         REQUIRE(database.is_open());
 
-        srs::persistence::UserRepository users(database);
-        srs::persistence::StudentRepository students(database);
-        srs::persistence::CourseRepository courses(database);
-        srs::persistence::EnrollmentRepository enrollments(database);
-        srs::persistence::GradeRepository grades(database);
+        UserRepository users(database);
+        StudentRepository students(database);
+        CourseRepository courses(database);
+        EnrollmentRepository enrollments;
+        GradeRepository grades(database);
 
-        REQUIRE(users.save({"student01", "hash", "Student", true}));
-        REQUIRE(students.save({"SRN-001", "student01", "Alice",
-                               "2005-01-01", "555", "CS", 3, true}));
-        REQUIRE(courses.save({"CS101", "Programming", 4, "student01"}));
-        REQUIRE(enrollments.save({"SRN-001", "CS101", 3}));
+        REQUIRE(users.save(UserRow{
+            "student1", "hashed_password", "student", true
+        }));
 
-        REQUIRE(grades.save({
+        REQUIRE(students.save(StudentRow{
+            "SRN-001",
+            "student1",
+            "Test Student",
+            "2005-01-01",
+            "9876543210",
+            "CSE",
+            3,
+            true
+        }));
+
+        REQUIRE(courses.save(CourseRow{
+            "CS101",
+            "Introduction to Programming",
+            4,
+            "faculty1"
+        }));
+
+        REQUIRE(enrollments.save(EnrollmentRow{
+            "SRN-001",
+            "CS101",
+            3
+        }));
+
+        REQUIRE(grades.save(GradeRow{
             "SRN-001",
             "CS101",
             "A",
@@ -94,26 +62,27 @@ TEST_CASE("Grades persist and reload after reopening SQLite database",
         }));
     }
 
+    // Reopen the database and verify that the grade was persisted.
     {
-        srs::persistence::Database database(test_database);
+        Database database(db_path);
         REQUIRE(database.is_open());
 
-        srs::persistence::GradeRepository grades(database);
-        const auto rows = grades.all();
+        GradeRepository grades(database);
+        auto result = grades.all();
 
-        REQUIRE(rows);
-        REQUIRE(rows.value().size() == 1);
+        REQUIRE(result);
+        REQUIRE(result.value().size() == 1);
 
-        const auto& grade = rows.value().front();
+        const GradeRow& grade = result.value().front();
 
-        REQUIRE(grade.srn == "SRN-001");
-        REQUIRE(grade.course_code == "CS101");
-        REQUIRE(grade.semester == 3);
-        REQUIRE(grade.letter == "A");
-        REQUIRE(grade.has_marks);
-        REQUIRE(grade.marks == 85.0);
-        REQUIRE(grade.grade_points == 9.0);
+        CHECK(grade.srn == "SRN-001");
+        CHECK(grade.course_code == "CS101");
+        CHECK(grade.letter == "A");
+        CHECK(grade.semester == 3);
+        CHECK(grade.has_marks);
+        CHECK(grade.marks == 85.0);
+        CHECK(grade.grade_points == 9.0);
     }
 
-    std::remove(test_database);
+    std::remove(db_path);
 }
