@@ -54,6 +54,7 @@ class CourseRepository {
 public:
     explicit CourseRepository(Database& database) : database_(database) {}
     srs::core::Result<void> save(const CourseRow& row);
+    srs::core::Result<void> deactivate(const std::string& code);
     srs::core::Result<CourseRow> find(const std::string& code) const;
     srs::core::Result<std::vector<CourseRow>> all() const;
 private: Database& database_;
