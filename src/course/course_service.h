@@ -30,6 +30,8 @@ struct RosterEntry {
 // SRS-F-010 (courses), F-011 (enrolment), F-012 (rosters).
 // Every call is identified by the caller's session id and is checked against
 // the role -> permission matrix before it does anything.
+// Admin only. Deactivates a course without deleting its records.
+
 class CourseService {
 public:
     static constexpr int MIN_CREDITS = 1;
@@ -108,6 +110,10 @@ private:
     std::vector<Enrollment> enrollments_;
     srs::persistence::Database* database_ = nullptr;
 };
+// Admin only. Deactivates a course without deleting its records.
+srs::core::Result<void> deactivate_course(
+    const std::string& session_id,
+    const std::string& course_code);
 
 }  // namespace srs::course
 
