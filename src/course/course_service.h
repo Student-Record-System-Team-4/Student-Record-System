@@ -18,6 +18,7 @@ struct Course {
     std::string title;
     int credits = 0;
     std::string faculty_username;
+    bool active = true;
 };
 
 struct RosterEntry {
