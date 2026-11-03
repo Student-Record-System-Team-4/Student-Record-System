@@ -11,7 +11,7 @@ This document tracks the implementation and testing status of requirements liste
 | Role-based access control | Role permission tests | Pending verification |
 | Student management | Student record tests | Pending verification |
 | Course management | Course and enrollment tests (`test_course_service.cpp`, `test_course_persistence.cpp`) | Tested |
-| Grade management | Grade and GPA calculation tests | Pending verification |
+| Grade management | Grade and GPA calculation tests (`test_grade_service.cpp`, `test_grade_persistence.cpp`) | Tested |
 | Attendance management | Attendance calculation tests | Pending verification |
 | Report generation | Report output tests | Pending verification |
 | Input validation | Existing validator tests | Partially tested |
