@@ -137,6 +137,44 @@ Result<void> CourseService::update_course(
     return Result<void>::success();
 }
 
+srs::core::Result<void> CourseService::deactivate_course(
+    const std::string& session_id,
+    const std::string& course_code) {
+
+    auto permission = accounts_.authorize(
+        session_id,
+        srs::auth::Permission::ManageCourses);
+
+    if (!permission) {
+        return srs::core::Result<void>::failure(
+            permission.error());
+    }
+
+    auto course = get_course(course_code);
+
+    if (!course) {
+        return srs::core::Result<void>::failure(
+            course.error());
+    }
+
+    course.value().active = false;
+
+    if (database_ != nullptr) {
+        srs::persistence::CourseRepository repository(*database_);
+
+        auto result = repository.deactivate(course_code);
+
+        if (!result) {
+            return result;
+        }
+    }
+
+    courses_[course_code] = course.value();
+
+    return srs::core::Result<void>::success();
+}
+
+
 Result<std::vector<Course>> CourseService::list_courses(
     const std::string& session_id) const {
     using CourseList = std::vector<Course>;
