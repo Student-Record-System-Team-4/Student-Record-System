@@ -25,6 +25,19 @@ Result<void> step(Database& db, sqlite3_stmt* s) {
         ? ErrorCode::ALREADY_EXISTS : ErrorCode::INTERNAL_ERROR);
 }
 }
+Result<void> CourseRepository::deactivate(const std::string& code) {
+    Statement s;
+
+    if (!prepare(
+            database_,
+            "UPDATE courses SET active = 0 WHERE code = ?;",
+            s)) {
+        return Result<void>::failure(ErrorCode::INTERNAL_ERROR);
+    }
+
+    text(s.value, 1, code);
+    return step(database_, s.value);
+}
 
 Result<void> UserRepository::save(const UserRow& row) {
     Statement s; if (!prepare(database_, "INSERT INTO users(username,password_hash,role,active) VALUES(?,?,?,?) ON CONFLICT(username) DO UPDATE SET password_hash=excluded.password_hash,role=excluded.role,active=excluded.active;", s)) return Result<void>::failure(ErrorCode::INTERNAL_ERROR);
