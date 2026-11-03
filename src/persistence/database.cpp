@@ -33,7 +33,8 @@ CREATE TABLE IF NOT EXISTS courses (
     code TEXT PRIMARY KEY,
     title TEXT NOT NULL,
     credits INTEGER NOT NULL CHECK(credits BETWEEN 1 AND 10),
-    faculty_username TEXT NOT NULL REFERENCES users(username)
+    faculty_username TEXT NOT NULL REFERENCES users(username),
+    active INTEGER NOT NULL DEFAULT 1 CHECK(active IN (0,1))
 );
 CREATE TABLE IF NOT EXISTS enrollments (
     srn TEXT NOT NULL REFERENCES student_profiles(srn),
