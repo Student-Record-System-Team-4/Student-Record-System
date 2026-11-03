@@ -68,6 +68,7 @@ bool CourseService::valid_faculty(const std::string& username) const {
 }
 
 Result<srs::student::StudentProfile> CourseService::find_active_student(
+    const std::string& session_id,
     const std::string& srn) const {
     using srs::student::StudentProfile;
     if (srn.empty()) {
@@ -77,7 +78,7 @@ Result<srs::student::StudentProfile> CourseService::find_active_student(
     srs::student::StudentSearchQuery query;
     query.srn = srn;
     const auto matches =
-        students_.search_students(query, srs::student::UserRole::Admin);
+        students_.search_students(session_id, query);
     if (!matches) {
         return Result<StudentProfile>::failure(ErrorCode::INTERNAL_ERROR);
     }
@@ -180,7 +181,7 @@ Result<void> CourseService::enroll_student(
     if (courses_.count(course_code) == 0) {
         return Result<void>::failure(ErrorCode::NOT_FOUND);
     }
-    const auto student = find_active_student(srn);
+    const auto student = find_active_student(session_id, srn);
     if (!student) {
         return Result<void>::failure(student.error());
     }
@@ -230,7 +231,7 @@ Result<std::vector<RosterEntry>> CourseService::view_roster(
             (semester != 0 && enrollment.semester != semester)) {
             continue;
         }
-        const auto student = find_active_student(enrollment.srn);
+        const auto student = find_active_student(session_id, enrollment.srn);
         if (!student) {
             continue;  // deactivated students drop off the roster
         }

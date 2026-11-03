@@ -289,9 +289,7 @@ Result<std::string> AttendanceService::own_srn(
         return Result<std::string>::failure(ErrorCode::SESSION_ERROR);
     }
 
-    const auto profile = students_.view_own_profile(
-        *username.value(),
-        srs::student::UserRole::Student);
+    const auto profile = students_.view_own_profile(session_id);
 
     if (!profile) {
         return Result<std::string>::failure(ErrorCode::NOT_FOUND);

@@ -218,8 +218,7 @@ Result<std::string> GradeService::own_srn(const std::string& session_id) const {
     if (!username) {
         return Result<std::string>::failure(ErrorCode::SESSION_ERROR);
     }
-    const auto profile =
-        students_.view_own_profile(*username.value(), srs::student::UserRole::Student);
+    const auto profile = students_.view_own_profile(session_id);
     if (!profile) {
         return Result<std::string>::failure(ErrorCode::NOT_FOUND);
     }

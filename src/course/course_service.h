@@ -97,6 +97,7 @@ private:
     static bool valid_course(const Course& course);
     bool valid_faculty(const std::string& username) const;
     srs::core::Result<srs::student::StudentProfile> find_active_student(
+        const std::string& session_id,
         const std::string& srn) const;
 
     srs::auth::UserAccountService& accounts_;

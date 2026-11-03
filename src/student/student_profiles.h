@@ -11,12 +11,6 @@
 
 namespace srs::student {
 
-enum class UserRole {
-    Student,
-    Faculty,
-    Admin
-};
-
 struct StudentProfile {
     std::string username;
     std::string name;
@@ -43,25 +37,24 @@ public:
         srs::persistence::Database& database);
 
     srs::core::Result<void> register_student(
-        const StudentProfile& profile,
-        UserRole requester);
+        const std::string& session_id,
+        const StudentProfile& profile);
 
     srs::core::Result<void> update_student(
+        const std::string& session_id,
         const std::string& srn,
-        const StudentProfile& profile,
-        UserRole requester);
+        const StudentProfile& profile);
 
     srs::core::Result<void> deactivate_student(
-        const std::string& srn,
-        UserRole requester);
+        const std::string& session_id,
+        const std::string& srn);
 
     srs::core::Result<StudentProfile> view_own_profile(
-        const std::string& username,
-        UserRole requester) const;
+        const std::string& session_id) const;
 
     srs::core::Result<std::vector<StudentProfile>> search_students(
-        const StudentSearchQuery& query,
-        UserRole requester) const;
+        const std::string& session_id,
+        const StudentSearchQuery& query) const;
 
 private:
     static bool valid_profile(const StudentProfile& profile);

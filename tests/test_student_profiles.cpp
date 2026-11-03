@@ -7,7 +7,6 @@ using srs::auth::AuthenticationService;
 using srs::student::StudentProfile;
 using srs::student::StudentProfileService;
 using srs::student::StudentSearchQuery;
-using srs::student::UserRole;
 
 namespace {
 
@@ -25,16 +24,21 @@ StudentProfile profile(
 
 TEST_CASE("Admin can register and retrieve a student profile", "[student]") {
     AuthenticationService authentication(
-        std::vector<srs::auth::User>{{"student123", "Pass1234"}});
+        std::vector<srs::auth::User>{{"admin01", "Admin1234", srs::auth::Role::Admin},
+                                     {"student123", "Pass1234"}});
     StudentProfileService students(authentication);
+    const auto admin = authentication.login("admin01", "Admin1234");
+    const auto student = authentication.login("student123", "Pass1234");
+    REQUIRE(admin != nullptr);
+    REQUIRE(student != nullptr);
 
     REQUIRE(students.register_student(
+                admin->id,
                 profile("student123", "Alice Smith", "SRN-001",
-                        "Computer Science", 3),
-                UserRole::Admin));
+                        "Computer Science", 3)));
 
     const auto result =
-        students.view_own_profile("student123", UserRole::Student);
+        students.view_own_profile(student->id);
     REQUIRE(result);
     REQUIRE(result.value()->srn == "SRN-001");
     REQUIRE(result.value()->programme == "Computer Science");
@@ -43,65 +47,78 @@ TEST_CASE("Admin can register and retrieve a student profile", "[student]") {
 TEST_CASE("Student profile ownership is enforced", "[student]") {
     AuthenticationService authentication(
         std::vector<srs::auth::User>{
+            {"admin01", "Admin1234", srs::auth::Role::Admin},
             {"student123", "Pass1234"}, {"student456", "Pass5678"}});
     StudentProfileService students(authentication);
+    const auto admin = authentication.login("admin01", "Admin1234");
+    const auto student = authentication.login("student123", "Pass1234");
+    const auto other = authentication.login("student456", "Pass5678");
+    REQUIRE(admin != nullptr);
+    REQUIRE(student != nullptr);
+    REQUIRE(other != nullptr);
     REQUIRE(students.register_student(
+        admin->id,
         profile("student123", "Alice Smith", "SRN-001",
-                "Computer Science", 3),
-        UserRole::Admin));
+                "Computer Science", 3)));
 
     REQUIRE_FALSE(students.view_own_profile(
-        "student456", UserRole::Student));
-    REQUIRE_FALSE(students.view_own_profile(
-        "student123", UserRole::Admin));
+        other->id));
+    REQUIRE(students.view_own_profile(student->id));
 }
 
 TEST_CASE("Admin can update and deactivate a student", "[student]") {
     AuthenticationService authentication(
-        std::vector<srs::auth::User>{{"student123", "Pass1234"}});
+        std::vector<srs::auth::User>{{"admin01", "Admin1234", srs::auth::Role::Admin},
+                                     {"student123", "Pass1234"}});
     StudentProfileService students(authentication);
+    const auto admin = authentication.login("admin01", "Admin1234");
+    const auto student = authentication.login("student123", "Pass1234");
+    REQUIRE(admin != nullptr);
+    REQUIRE(student != nullptr);
     REQUIRE(students.register_student(
+        admin->id,
         profile("student123", "Alice Smith", "SRN-001",
-                "Computer Science", 3),
-        UserRole::Admin));
+                "Computer Science", 3)));
 
     StudentProfile updated = profile(
         "student123", "Alice Jones", "SRN-001", "Data Science", 4);
     REQUIRE(students.update_student(
-        "SRN-001", updated, UserRole::Admin));
-    REQUIRE(students.view_own_profile(
-                "student123", UserRole::Student)
+        admin->id,
+        "SRN-001", updated));
+    REQUIRE(students.view_own_profile(student->id)
                 .value()
                 ->name == "Alice Jones");
 
-    REQUIRE(students.deactivate_student("SRN-001", UserRole::Admin));
+    REQUIRE(students.deactivate_student(admin->id, "SRN-001"));
     REQUIRE(authentication.login("student123", "Pass1234") == nullptr);
-    REQUIRE_FALSE(students.view_own_profile(
-        "student123", UserRole::Student));
+    REQUIRE_FALSE(students.view_own_profile(student->id));
 }
 
 TEST_CASE("Admin can search students by profile fields", "[student]") {
     AuthenticationService authentication(
         std::vector<srs::auth::User>{
+            {"admin01", "Admin1234", srs::auth::Role::Admin},
             {"student123", "Pass1234"}, {"student456", "Pass5678"}});
     StudentProfileService students(authentication);
+    const auto admin = authentication.login("admin01", "Admin1234");
+    REQUIRE(admin != nullptr);
     REQUIRE(students.register_student(
+        admin->id,
         profile("student123", "Alice Smith", "SRN-001",
-                "Computer Science", 3),
-        UserRole::Admin));
+                "Computer Science", 3)));
     REQUIRE(students.register_student(
+        admin->id,
         profile("student456", "Bob Jones", "SRN-002",
-                "Business", 2),
-        UserRole::Admin));
+                "Business", 2)));
 
     const auto result = students.search_students(
-        StudentSearchQuery{"alice", "", "", 0}, UserRole::Admin);
+        admin->id, StudentSearchQuery{"alice", "", "", 0});
     REQUIRE(result);
     REQUIRE(result.value()->size() == 1);
     REQUIRE(result.value()->front().srn == "SRN-001");
 
     const auto semester_result = students.search_students(
-        StudentSearchQuery{"", "", "", 2}, UserRole::Admin);
+        admin->id, StudentSearchQuery{"", "", "", 2});
     REQUIRE(semester_result);
     REQUIRE(semester_result.value()->size() == 1);
     REQUIRE(semester_result.value()->front().username == "student456");
@@ -109,17 +126,20 @@ TEST_CASE("Admin can search students by profile fields", "[student]") {
 
 TEST_CASE("Invalid and duplicate student records are rejected", "[student]") {
     AuthenticationService authentication(
-        std::vector<srs::auth::User>{{"student123", "Pass1234"}});
+        std::vector<srs::auth::User>{{"admin01", "Admin1234", srs::auth::Role::Admin},
+                                     {"student123", "Pass1234"}});
     StudentProfileService students(authentication);
+    const auto admin = authentication.login("admin01", "Admin1234");
+    REQUIRE(admin != nullptr);
     const StudentProfile valid = profile(
         "student123", "Alice Smith", "SRN-001", "Computer Science", 3);
 
-    REQUIRE_FALSE(students.register_student(valid, UserRole::Student));
-    REQUIRE(students.register_student(valid, UserRole::Admin));
-    REQUIRE_FALSE(students.register_student(valid, UserRole::Admin));
+    REQUIRE_FALSE(students.register_student("forged-session", valid));
+    REQUIRE(students.register_student(admin->id, valid));
+    REQUIRE_FALSE(students.register_student(admin->id, valid));
 
     const StudentProfile invalid = profile(
         "student123", "Alice Smith", "bad srn", "Computer Science", 3);
     REQUIRE_FALSE(students.update_student(
-        "SRN-001", invalid, UserRole::Admin));
+        admin->id, "SRN-001", invalid));
 }

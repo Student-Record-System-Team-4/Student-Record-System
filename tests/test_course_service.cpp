@@ -17,7 +17,6 @@ using srs::course::Course;
 using srs::course::CourseService;
 using srs::student::StudentProfile;
 using srs::student::StudentProfileService;
-using srs::student::UserRole;
 
 namespace {
 
@@ -39,15 +38,15 @@ struct Fixture {
     std::string student;
 
     Fixture() {
-        REQUIRE(students.register_student(
-            StudentProfile{"student01", "Alice Smith", "SRN-001", "2005-01-01",
-                           "555-0100", "Computer Science", 3, true},
-            UserRole::Admin));
-        REQUIRE(students.register_student(
-            StudentProfile{"student02", "Bob Jones", "SRN-002", "2005-02-02",
-                           "555-0101", "Computer Science", 3, true},
-            UserRole::Admin));
         admin = login("admin01", "Admin1234");
+        REQUIRE(students.register_student(
+            admin,
+            StudentProfile{"student01", "Alice Smith", "SRN-001", "2005-01-01",
+                           "555-0100", "Computer Science", 3, true}));
+        REQUIRE(students.register_student(
+            admin,
+            StudentProfile{"student02", "Bob Jones", "SRN-002", "2005-02-02",
+                           "555-0101", "Computer Science", 3, true}));
         faculty1 = login("faculty01", "Teach1234");
         faculty2 = login("faculty02", "Teach5678");
         student = login("student01", "Pass1234");
@@ -205,7 +204,7 @@ TEST_CASE("Deactivated students cannot be enrolled and leave the roster", "[enro
     REQUIRE(f.courses.enroll_student(f.admin, "SRN-001", "CS201", 3));
     REQUIRE(f.courses.enroll_student(f.admin, "SRN-002", "CS201", 3));
 
-    REQUIRE(f.students.deactivate_student("SRN-001", UserRole::Admin));
+    REQUIRE(f.students.deactivate_student(f.admin, "SRN-001"));
 
     REQUIRE(f.courses.enroll_student(f.admin, "SRN-001", "CS201", 4).error() ==
             ErrorCode::NOT_FOUND);
