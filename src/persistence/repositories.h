@@ -13,6 +13,7 @@ struct UserRow {
     std::string username;
     std::string password_hash;
     std::string role;
+    bool active = true;
 };
 
 struct StudentRow {
@@ -43,8 +44,7 @@ struct GradeRow {
 };
 
 /*
- * Keep the fields in this exact order.
- * attendance_service.cpp initializes AttendanceRow as:
+ * Keep this order aligned with attendance_service.cpp:
  * {srn, course_code, date, session_details, status, semester}
  */
 struct AttendanceRow {
@@ -62,6 +62,8 @@ public:
         : database_(database) {}
 
     srs::core::Result<void> save(const UserRow& row);
+    srs::core::Result<void> remove(const std::string& username);
+    srs::core::Result<UserRow> find(const std::string& username) const;
     srs::core::Result<std::vector<UserRow>> all() const;
 
 private:
