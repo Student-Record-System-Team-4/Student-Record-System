@@ -2,6 +2,7 @@
 
 #include <cctype>
 #include <cmath>
+#include "persistence/repositories.h"
 
 namespace srs::grades {
 
@@ -11,8 +12,14 @@ using srs::core::Result;
 
 namespace {
 
-double round_two_decimals(double value) {
-    return std::round(value * 100.0) / 100.0;
+// weighted_points / credits rounded half-up to 2 decimals using integer
+// arithmetic. Grade points and credits are whole numbers, so the exact ratio
+// is a rational; floating-point rounding can misround exact halves
+// (e.g. 4.225 -> 4.22).
+double ratio_two_decimals(long long weighted_points, long long credits) {
+    const long long hundredths =
+        (weighted_points * 200 + credits) / (2 * credits);
+    return static_cast<double>(hundredths) / 100.0;
 }
 
 }  // namespace
@@ -58,6 +65,21 @@ GradeService::GradeService(
       students_(students),
       courses_(courses) {}
 
+GradeService::GradeService(
+    srs::auth::UserAccountService& accounts,
+    srs::auth::AuthenticationService& authentication,
+    srs::student::StudentProfileService& students,
+    srs::course::CourseService& courses,
+    srs::persistence::Database& database)
+    : GradeService(accounts, authentication, students, courses) {
+    database_ = &database;
+    srs::persistence::GradeRepository repository(database);
+    const auto rows = repository.all();
+    if (rows) for (const auto& row : *rows.value())
+        grades_[Key(row.srn, row.course_code, row.semester)] =
+            {row.has_marks, row.marks, row.letter, row.grade_points};
+}
+
 Result<void> GradeService::check_entry(
     const std::string& session_id,
     const std::string& srn,
@@ -101,9 +123,9 @@ Result<void> GradeService::enter_marks(
     }
     const std::string letter = GradeScale::letter_for_marks(marks);
     const auto points = GradeScale::points_for_letter(letter);
-    grades_[Key(srn, course_code, semester)] =
-        StoredGrade{true, marks, letter, *points.value()};
-    return Result<void>::success();
+    return store_grade(
+        srn, course_code, semester,
+        StoredGrade{true, marks, letter, *points.value()});
 }
 
 Result<void> GradeService::enter_letter_grade(
@@ -120,8 +142,27 @@ Result<void> GradeService::enter_letter_grade(
     if (!points) {
         return Result<void>::failure(points.error());
     }
-    grades_[Key(srn, course_code, semester)] =
-        StoredGrade{false, 0.0, GradeScale::normalize_letter(letter), *points.value()};
+    return store_grade(
+        srn, course_code, semester,
+        StoredGrade{false, 0.0, GradeScale::normalize_letter(letter),
+                    *points.value()});
+}
+
+// Saves to the database first so a failed write never leaves the in-memory
+// grades (and therefore GPA/CGPA) ahead of what is persisted.
+Result<void> GradeService::store_grade(
+    const std::string& srn,
+    const std::string& course_code,
+    int semester,
+    const StoredGrade& grade) {
+    if (database_) {
+        srs::persistence::GradeRepository repository(*database_);
+        if (!repository.save({srn, course_code, grade.letter, semester,
+                              grade.has_marks, grade.marks, grade.points})) {
+            return Result<void>::failure(ErrorCode::INTERNAL_ERROR);
+        }
+    }
+    grades_[Key(srn, course_code, semester)] = grade;
     return Result<void>::success();
 }
 
@@ -133,6 +174,12 @@ std::vector<GradeRecord> GradeService::records_for(const std::string& srn) const
         }
         const auto course = courses_.get_course(std::get<1>(entry.first));
         if (!course) {
+            continue;
+        }
+        // A grade belongs to an enrollment; without one it is not reported
+        // and does not count toward GPA/CGPA.
+        if (!courses_.is_enrolled(srn, std::get<1>(entry.first),
+                                  std::get<2>(entry.first))) {
             continue;
         }
         GradeRecord record;
@@ -152,14 +199,15 @@ std::vector<GradeRecord> GradeService::records_for(const std::string& srn) const
 
 AcademicSummary GradeService::compute_summary(const std::string& srn) const {
     struct Totals {
-        double weighted_points = 0.0;
-        int credits = 0;
+        long long weighted_points = 0;
+        long long credits = 0;
     };
     std::map<int, Totals> per_semester;
     Totals overall;
 
     for (const auto& record : records_for(srn)) {
-        const double weighted = record.grade_points * record.credits;
+        const long long weighted =
+            std::llround(record.grade_points) * record.credits;
         per_semester[record.semester].weighted_points += weighted;
         per_semester[record.semester].credits += record.credits;
         overall.weighted_points += weighted;
@@ -170,13 +218,15 @@ AcademicSummary GradeService::compute_summary(const std::string& srn) const {
     for (const auto& entry : per_semester) {
         SemesterGpa gpa;
         gpa.semester = entry.first;
-        gpa.credits = entry.second.credits;
-        gpa.gpa = round_two_decimals(entry.second.weighted_points / entry.second.credits);
+        gpa.credits = static_cast<int>(entry.second.credits);
+        gpa.gpa = ratio_two_decimals(entry.second.weighted_points,
+                                     entry.second.credits);
         summary.semesters.push_back(gpa);
     }
-    summary.total_credits = overall.credits;
+    summary.total_credits = static_cast<int>(overall.credits);
     summary.cgpa = overall.credits > 0
-                       ? round_two_decimals(overall.weighted_points / overall.credits)
+                       ? ratio_two_decimals(overall.weighted_points,
+                                            overall.credits)
                        : 0.0;
     return summary;
 }
@@ -190,8 +240,7 @@ Result<std::string> GradeService::own_srn(const std::string& session_id) const {
     if (!username) {
         return Result<std::string>::failure(ErrorCode::SESSION_ERROR);
     }
-    const auto profile =
-        students_.view_own_profile(*username.value(), srs::student::UserRole::Student);
+    const auto profile = students_.view_own_profile(session_id);
     if (!profile) {
         return Result<std::string>::failure(ErrorCode::NOT_FOUND);
     }

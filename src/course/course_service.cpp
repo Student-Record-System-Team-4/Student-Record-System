@@ -1,10 +1,11 @@
-
-
+```cpp
 #include "course/course_service.h"
 
 #include <algorithm>
 #include <cctype>
 #include <utility>
+
+#include "persistence/repositories.h"
 
 namespace srs::course {
 
@@ -20,6 +21,44 @@ CourseService::CourseService(
     : accounts_(accounts),
       authentication_(authentication),
       students_(students) {}
+
+CourseService::CourseService(
+    srs::auth::UserAccountService& accounts,
+    srs::auth::AuthenticationService& authentication,
+    srs::student::StudentProfileService& students,
+    srs::persistence::Database& database)
+    : CourseService(accounts, authentication, students) {
+
+    database_ = &database;
+
+    srs::persistence::CourseRepository course_repository(database);
+    const auto courses = course_repository.all();
+
+    if (courses) {
+        for (const auto& course : *courses.value()) {
+            courses_[course.code] = {
+                course.code,
+                course.title,
+                course.credits,
+                course.faculty_username,
+                course.active
+            };
+        }
+    }
+
+    srs::persistence::EnrollmentRepository enrollment_repository(database);
+    const auto enrollments = enrollment_repository.all();
+
+    if (enrollments) {
+        for (const auto& enrollment : *enrollments.value()) {
+            enrollments_.push_back({
+                enrollment.srn,
+                enrollment.course_code,
+                enrollment.semester
+            });
+        }
+    }
+}
 
 bool CourseService::valid_course(const Course& course) {
     if (course.code.size() < 2 || course.code.size() > 16) {
@@ -61,6 +100,7 @@ bool CourseService::valid_faculty(const std::string& username) const {
 }
 
 Result<srs::student::StudentProfile> CourseService::find_active_student(
+    const std::string& session_id,
     const std::string& srn) const {
 
     using srs::student::StudentProfile;
@@ -69,12 +109,10 @@ Result<srs::student::StudentProfile> CourseService::find_active_student(
         return Result<StudentProfile>::failure(ErrorCode::INVALID_INPUT);
     }
 
-    // search_students matches substrings, so look for the exact SRN ourselves.
     srs::student::StudentSearchQuery query;
     query.srn = srn;
 
-    const auto matches =
-        students_.search_students(query, srs::student::UserRole::Admin);
+    const auto matches = students_.search_students(session_id, query);
 
     if (!matches) {
         return Result<StudentProfile>::failure(ErrorCode::INTERNAL_ERROR);
@@ -108,6 +146,20 @@ Result<void> CourseService::create_course(
         return Result<void>::failure(ErrorCode::ALREADY_EXISTS);
     }
 
+    if (database_) {
+        srs::persistence::CourseRepository repository(*database_);
+
+        if (!repository.save({
+                course.code,
+                course.title,
+                course.credits,
+                course.faculty_username,
+                course.active
+            })) {
+            return Result<void>::failure(ErrorCode::INTERNAL_ERROR);
+        }
+    }
+
     courses_[course.code] = course;
 
     return Result<void>::success();
@@ -134,8 +186,56 @@ Result<void> CourseService::update_course(
         return Result<void>::failure(ErrorCode::NOT_FOUND);
     }
 
+    if (database_) {
+        srs::persistence::CourseRepository repository(*database_);
+
+        if (!repository.save({
+                course.code,
+                course.title,
+                course.credits,
+                course.faculty_username,
+                course.active
+            })) {
+            return Result<void>::failure(ErrorCode::INTERNAL_ERROR);
+        }
+    }
+
     existing->second = course;
 
+    return Result<void>::success();
+}
+
+Result<void> CourseService::deactivate_course(
+    const std::string& session_id,
+    const std::string& course_code) {
+
+    const auto allowed =
+        accounts_.authorize(session_id, Permission::ManageCourses);
+
+    if (!allowed) {
+        return Result<void>::failure(allowed.error());
+    }
+
+    const auto existing = courses_.find(course_code);
+
+    if (existing == courses_.end()) {
+        return Result<void>::failure(ErrorCode::NOT_FOUND);
+    }
+
+    if (!existing->second.active) {
+        return Result<void>::success();
+    }
+
+    if (database_) {
+        srs::persistence::CourseRepository repository(*database_);
+        const auto result = repository.deactivate(course_code);
+
+        if (!result) {
+            return Result<void>::failure(result.error());
+        }
+    }
+
+    existing->second.active = false;
     return Result<void>::success();
 }
 
@@ -161,8 +261,7 @@ Result<std::vector<Course>> CourseService::list_courses(
         return Result<CourseList>::failure(faculty_access.error());
     }
 
-    const auto username =
-        authentication_.username_for_session(session_id);
+    const auto username = authentication_.username_for_session(session_id);
 
     if (!username) {
         return Result<CourseList>::failure(ErrorCode::SESSION_ERROR);
@@ -194,11 +293,17 @@ Result<void> CourseService::enroll_student(
         return Result<void>::failure(ErrorCode::INVALID_INPUT);
     }
 
-    if (courses_.count(course_code) == 0) {
+    const auto course = courses_.find(course_code);
+
+    if (course == courses_.end()) {
         return Result<void>::failure(ErrorCode::NOT_FOUND);
     }
 
-    const auto student = find_active_student(srn);
+    if (!course->second.active) {
+        return Result<void>::failure(ErrorCode::INVALID_INPUT);
+    }
+
+    const auto student = find_active_student(session_id, srn);
 
     if (!student) {
         return Result<void>::failure(student.error());
@@ -208,8 +313,62 @@ Result<void> CourseService::enroll_student(
         return Result<void>::failure(ErrorCode::ALREADY_EXISTS);
     }
 
+    if (database_) {
+        srs::persistence::EnrollmentRepository repository(*database_);
+
+        if (!repository.save({srn, course_code, semester})) {
+            return Result<void>::failure(ErrorCode::INTERNAL_ERROR);
+        }
+    }
+
     enrollments_.push_back({srn, course_code, semester});
 
+    return Result<void>::success();
+}
+
+Result<void> CourseService::remove_student(
+    const std::string& session_id,
+    const std::string& srn,
+    const std::string& course_code,
+    int semester) {
+
+    const auto allowed =
+        accounts_.authorize(session_id, Permission::EnrollStudents);
+
+    if (!allowed) {
+        return Result<void>::failure(allowed.error());
+    }
+
+    if (semester < MIN_SEMESTER || semester > MAX_SEMESTER) {
+        return Result<void>::failure(ErrorCode::INVALID_INPUT);
+    }
+
+    if (courses_.count(course_code) == 0) {
+        return Result<void>::failure(ErrorCode::NOT_FOUND);
+    }
+
+    const auto enrollment = std::find_if(
+        enrollments_.begin(),
+        enrollments_.end(),
+        [&](const Enrollment& item) {
+            return item.srn == srn &&
+                   item.course_code == course_code &&
+                   item.semester == semester;
+        });
+
+    if (enrollment == enrollments_.end()) {
+        return Result<void>::failure(ErrorCode::NOT_FOUND);
+    }
+
+    if (database_) {
+        srs::persistence::EnrollmentRepository repository(*database_);
+
+        if (!repository.remove(srn, course_code, semester)) {
+            return Result<void>::failure(ErrorCode::INTERNAL_ERROR);
+        }
+    }
+
+    enrollments_.erase(enrollment);
     return Result<void>::success();
 }
 
@@ -233,8 +392,12 @@ Result<std::vector<RosterEntry>> CourseService::view_roster(
         return Result<Roster>::failure(ErrorCode::NOT_FOUND);
     }
 
-    const auto username =
-        authentication_.username_for_session(session_id);
+    if (semester != 0 &&
+        (semester < MIN_SEMESTER || semester > MAX_SEMESTER)) {
+        return Result<Roster>::failure(ErrorCode::INVALID_INPUT);
+    }
+
+    const auto username = authentication_.username_for_session(session_id);
 
     if (!username) {
         return Result<Roster>::failure(ErrorCode::SESSION_ERROR);
@@ -259,10 +422,11 @@ Result<std::vector<RosterEntry>> CourseService::view_roster(
             continue;
         }
 
-        const auto student = find_active_student(enrollment.srn);
+        const auto student =
+            find_active_student(session_id, enrollment.srn);
 
         if (!student) {
-            continue;  // Deactivated students drop off the roster.
+            continue;
         }
 
         roster.push_back({
@@ -278,8 +442,8 @@ Result<std::vector<RosterEntry>> CourseService::view_roster(
         roster.end(),
         [](const RosterEntry& a, const RosterEntry& b) {
             return a.srn != b.srn
-                ? a.srn < b.srn
-                : a.semester < b.semester;
+                       ? a.srn < b.srn
+                       : a.semester < b.semester;
         });
 
     return Result<Roster>::success(std::move(roster));
@@ -378,13 +542,12 @@ Result<std::vector<RosterEntry>> CourseService::view_student_enrollments(
             return Result<Roster>::failure(allowed.error());
         }
 
-        const auto student = find_active_student(srn);
+        const auto student = find_active_student(session_id, srn);
 
         if (!student) {
             return Result<Roster>::failure(student.error());
         }
     } else {
-        // Faculty cannot access institution-wide student reports.
         return Result<Roster>::failure(ErrorCode::PERMISSION_DENIED);
     }
 
@@ -401,7 +564,7 @@ Result<std::vector<RosterEntry>> CourseService::view_student_enrollments(
             continue;
         }
 
-        const auto student = find_active_student(srn);
+        const auto student = find_active_student(session_id, srn);
 
         if (!student) {
             return Result<Roster>::failure(student.error());
@@ -429,3 +592,4 @@ Result<std::vector<RosterEntry>> CourseService::view_student_enrollments(
 }
 
 }  // namespace srs::course
+```

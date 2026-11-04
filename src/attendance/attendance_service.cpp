@@ -4,6 +4,7 @@
 #include <cctype>
 #include <cmath>
 #include <utility>
+#include "persistence/repositories.h"
 
 namespace srs::attendance {
 
@@ -21,6 +22,46 @@ bool has_non_whitespace(const std::string& value) {
         }
     }
     return false;
+}
+
+std::string trimmed(const std::string& value) {
+    std::size_t first = 0;
+    std::size_t last = value.size();
+    while (first < last &&
+           std::isspace(static_cast<unsigned char>(value[first]))) {
+        ++first;
+    }
+    while (last > first &&
+           std::isspace(static_cast<unsigned char>(value[last - 1]))) {
+        --last;
+    }
+    return value.substr(first, last - first);
+}
+
+bool equal_ignoring_case(const std::string& a, const std::string& b) {
+    if (a.size() != b.size()) {
+        return false;
+    }
+    for (std::size_t i = 0; i < a.size(); ++i) {
+        if (std::tolower(static_cast<unsigned char>(a[i])) !=
+            std::tolower(static_cast<unsigned char>(b[i]))) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// Session details identify the session, so keep them short and printable.
+bool valid_session_details(const std::string& details) {
+    if (details.empty() || details.size() > 100) {
+        return false;
+    }
+    for (unsigned char ch : details) {
+        if (ch < 32 || ch == 127) {
+            return false;
+        }
+    }
+    return true;
 }
 
 // Validate a real calendar date in YYYY-MM-DD format.
@@ -73,8 +114,14 @@ bool is_valid_date(const std::string& date) {
     return day >= 1 && day <= max_days;
 }
 
-double round_two_decimals(double value) {
-    return std::round(value * 100.0) / 100.0;
+// present / total * 100 rounded half-up to 2 decimals using integer
+// arithmetic, so exact halves are never misrounded by floating point
+// (e.g. 23 of 160 is exactly 14.375 -> 14.38).
+double percentage_two_decimals(int present, int total) {
+    const long long hundredths =
+        (static_cast<long long>(present) * 20000 + total) /
+        (2LL * total);
+    return static_cast<double>(hundredths) / 100.0;
 }
 
 }  // namespace
@@ -95,6 +142,27 @@ AttendanceService::AttendanceService(
           threshold <= 100.0
               ? threshold
               : DEFAULT_THRESHOLD) {}
+
+AttendanceService::AttendanceService(
+    srs::auth::UserAccountService& accounts,
+    srs::auth::AuthenticationService& authentication,
+    srs::student::StudentProfileService& students,
+    srs::course::CourseService& courses,
+    srs::persistence::Database& database,
+    double threshold)
+    : AttendanceService(accounts, authentication, students, courses, threshold) {
+    database_ = &database;
+    srs::persistence::AttendanceRepository repository(database);
+    const auto rows = repository.all();
+    if (rows) for (const auto& row : *rows.value()) {
+        const auto status = row.status == "Present" ? AttendanceStatus::Present :
+            row.status == "Late" ? AttendanceStatus::Late : AttendanceStatus::Absent;
+        records_[Key(row.srn, row.course_code, row.semester, row.date,
+                     row.session_details)] =
+            {row.srn, row.course_code, row.semester, row.date,
+             row.session_details, status};
+    }
+}
 
 // Check faculty permission, course assignment and student enrolment.
 Result<void> AttendanceService::check_faculty_access(
@@ -150,9 +218,11 @@ Result<void> AttendanceService::mark_attendance(
     const std::string& session_details,
     AttendanceStatus status) {
 
+    const std::string details = trimmed(session_details);
+
     if (!has_non_whitespace(srn) ||
         !has_non_whitespace(course_code) ||
-        !has_non_whitespace(session_details) ||
+        !valid_session_details(details) ||
         !is_valid_date(date)) {
         return Result<void>::failure(ErrorCode::INVALID_INPUT);
     }
@@ -170,20 +240,40 @@ Result<void> AttendanceService::mark_attendance(
         return Result<void>::failure(access.error());
     }
 
-    const Key key(
-        srn, course_code, semester, date, session_details);
+    // The same session may be typed with different case or stray spaces
+    // ("Lecture 1" / "lecture 1 "). Treat those as one session and reuse the
+    // stored spelling so a correction updates the existing entry instead of
+    // adding a second one.
+    std::string canonical_details = details;
+    for (const auto& entry : records_) {
+        const AttendanceRecord& existing = entry.second;
+        if (existing.srn == srn &&
+            existing.course_code == course_code &&
+            existing.semester == semester &&
+            existing.date == date &&
+            equal_ignoring_case(existing.session_details, details)) {
+            canonical_details = existing.session_details;
+            break;
+        }
+    }
 
-    AttendanceRecord record{
-        srn,
-        course_code,
-        semester,
-        date,
-        session_details,
-        status
-    };
+    const Key key(srn, course_code, semester, date, canonical_details);
+
+    // Save to the database first so a failed write never leaves the
+    // in-memory records (and the percentages) ahead of what is persisted.
+    if (database_) {
+        srs::persistence::AttendanceRepository repository(*database_);
+        const char* status_name = status == AttendanceStatus::Present ? "Present" :
+            status == AttendanceStatus::Late ? "Late" : "Absent";
+        if (!repository.save({srn, course_code, date, canonical_details,
+                              status_name, semester})) {
+            return Result<void>::failure(ErrorCode::INTERNAL_ERROR);
+        }
+    }
 
     // If the same session is entered again, update the existing record.
-    records_[key] = std::move(record);
+    records_[key] = AttendanceRecord{
+        srn, course_code, semester, date, canonical_details, status};
 
     return Result<void>::success();
 }
@@ -231,13 +321,15 @@ AttendanceService::calculate_percentage_for(
     }
 
     if (summary.total_sessions > 0) {
-        summary.percentage = round_two_decimals(
-            (static_cast<double>(summary.present_sessions) /
-             summary.total_sessions) * 100.0);
-    }
+        summary.percentage = percentage_two_decimals(
+            summary.present_sessions, summary.total_sessions);
 
-    summary.below_threshold =
-        summary.percentage < threshold_;
+        // Compare the exact ratio, not the rounded display value, and never
+        // flag a student for whom no sessions have been recorded yet.
+        summary.below_threshold =
+            static_cast<double>(summary.present_sessions) * 100.0 <
+            threshold_ * summary.total_sessions;
+    }
 
     return Result<AttendanceSummary>::success(summary);
 }
@@ -260,9 +352,7 @@ Result<std::string> AttendanceService::own_srn(
         return Result<std::string>::failure(ErrorCode::SESSION_ERROR);
     }
 
-    const auto profile = students_.view_own_profile(
-        *username.value(),
-        srs::student::UserRole::Student);
+    const auto profile = students_.view_own_profile(session_id);
 
     if (!profile) {
         return Result<std::string>::failure(ErrorCode::NOT_FOUND);
@@ -306,8 +396,11 @@ AttendanceService::view_my_attendance(
     for (const auto& entry : records_) {
         const AttendanceRecord& record = entry.second;
 
+        // Only records that still belong to an enrollment are shown.
         if (record.srn == *srn.value() &&
-            record.course_code == course_code) {
+            record.course_code == course_code &&
+            courses_.is_enrolled(record.srn, record.course_code,
+                                 record.semester)) {
             result.push_back(record);
         }
     }

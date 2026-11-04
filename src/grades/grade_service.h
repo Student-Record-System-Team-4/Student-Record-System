@@ -11,6 +11,7 @@
 #include "core/result.h"
 #include "course/course_service.h"
 #include "student/student_profiles.h"
+#include "persistence/database.h"
 
 namespace srs::grades {
 
@@ -60,6 +61,12 @@ public:
         srs::auth::AuthenticationService& authentication,
         srs::student::StudentProfileService& students,
         srs::course::CourseService& courses);
+    GradeService(
+        srs::auth::UserAccountService& accounts,
+        srs::auth::AuthenticationService& authentication,
+        srs::student::StudentProfileService& students,
+        srs::course::CourseService& courses,
+        srs::persistence::Database& database);
 
     // Faculty assigned to the course only (F-013, F-016). Entering a grade
     // again for the same student/course/semester updates it.
@@ -104,6 +111,11 @@ private:
     };
     using Key = std::tuple<std::string, std::string, int>;  // srn, course, semester
 
+    srs::core::Result<void> store_grade(
+        const std::string& srn,
+        const std::string& course_code,
+        int semester,
+        const StoredGrade& grade);
     srs::core::Result<void> check_entry(
         const std::string& session_id,
         const std::string& srn,
@@ -117,6 +129,7 @@ private:
     srs::student::StudentProfileService& students_;
     srs::course::CourseService& courses_;
     std::map<Key, StoredGrade> grades_;
+    srs::persistence::Database* database_ = nullptr;
 };
 
 }  // namespace srs::grades

@@ -20,7 +20,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake g++ pkg-config libsodium-dev
+          sudo apt-get install -y cmake g++ pkg-config libsodium-dev libsqlite3-dev
 
       - name: Configure project
         run: cmake -S . -B build -DBUILD_TESTING=ON

@@ -8,6 +8,7 @@
 
 #include "auth/access_control.h"
 #include "core/result.h"
+#include "persistence/database.h"
 
 namespace srs::auth {
 
@@ -25,6 +26,9 @@ struct Session {
 class AuthenticationService {
 public:
     explicit AuthenticationService(std::vector<User> registered_users);
+    AuthenticationService(
+        std::vector<User> registered_users,
+        srs::persistence::Database& database);
 
     std::unique_ptr<Session> login(
         const std::string& username,
@@ -65,6 +69,7 @@ private:
     std::unordered_map<std::string, Role> roles_;
     std::unordered_map<std::string, Session> sessions_;
     unsigned long long next_session_id_ = 1;
+    srs::persistence::Database* database_ = nullptr;
 };
 
 }  // namespace srs::auth

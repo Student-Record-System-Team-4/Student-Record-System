@@ -2,17 +2,10 @@
 
 #include <algorithm>
 #include <cctype>
+#include "persistence/repositories.h"
 
 namespace srs::student {
 namespace {
-
-bool is_admin(UserRole role) {
-    return role == UserRole::Admin;
-}
-
-bool is_student(UserRole role) {
-    return role == UserRole::Student;
-}
 
 bool non_empty_within_limit(const std::string& value, std::size_t limit) {
     return !value.empty() && value.size() <= limit;
@@ -34,10 +27,26 @@ StudentProfileService::StudentProfileService(
     srs::auth::AuthenticationService& authentication)
     : authentication_(authentication) {}
 
+StudentProfileService::StudentProfileService(
+    srs::auth::AuthenticationService& authentication,
+    srs::persistence::Database& database)
+    : authentication_(authentication), database_(&database) {
+    srs::persistence::StudentRepository repository(database);
+    const auto rows = repository.all();
+    if (rows) for (const auto& row : *rows.value()) profiles_.push_back(
+        {row.username, row.name, row.srn, row.date_of_birth, row.contact,
+         row.programme, row.semester, row.active});
+}
+
 srs::core::Result<void> StudentProfileService::register_student(
-    const StudentProfile& profile,
-    UserRole requester) {
-    if (!is_admin(requester) || !valid_profile(profile) ||
+    const std::string& session_id,
+    const StudentProfile& profile) {
+    const auto username = authentication_.username_for_session(session_id);
+    const auto role = username ? authentication_.role_of(*username.value())
+                               : srs::core::Result<srs::auth::Role>::failure(
+                                     srs::core::ErrorCode::SESSION_ERROR);
+    if (!role || *role.value() != srs::auth::Role::Admin ||
+        !valid_profile(profile) ||
         !authentication_.is_registered(profile.username)) {
         return srs::core::Result<void>::failure(
             srs::core::ErrorCode::INVALID_INPUT);
@@ -52,14 +61,30 @@ srs::core::Result<void> StudentProfileService::register_student(
     }
 
     profiles_.push_back(profile);
+    if (database_) {
+        srs::persistence::StudentRepository repository(*database_);
+        if (!repository.save({profile.srn, profile.username, profile.name,
+                              profile.date_of_birth, profile.contact,
+                              profile.programme, profile.semester,
+                              profile.active})) {
+            profiles_.pop_back();
+            return srs::core::Result<void>::failure(
+                srs::core::ErrorCode::INTERNAL_ERROR);
+        }
+    }
     return srs::core::Result<void>::success();
 }
 
 srs::core::Result<void> StudentProfileService::update_student(
+    const std::string& session_id,
     const std::string& srn,
-    const StudentProfile& profile,
-    UserRole requester) {
-    if (!is_admin(requester) || !valid_profile(profile)) {
+    const StudentProfile& profile) {
+    const auto username = authentication_.username_for_session(session_id);
+    const auto role = username ? authentication_.role_of(*username.value())
+                               : srs::core::Result<srs::auth::Role>::failure(
+                                     srs::core::ErrorCode::SESSION_ERROR);
+    if (!role || *role.value() != srs::auth::Role::Admin ||
+        !valid_profile(profile)) {
         return srs::core::Result<void>::failure(
             srs::core::ErrorCode::INVALID_INPUT);
     }
@@ -71,6 +96,15 @@ srs::core::Result<void> StudentProfileService::update_student(
                     srs::core::ErrorCode::INVALID_INPUT);
             }
             existing = profile;
+            if (database_) {
+                srs::persistence::StudentRepository repository(*database_);
+                if (!repository.save({profile.srn, profile.username, profile.name,
+                                      profile.date_of_birth, profile.contact,
+                                      profile.programme, profile.semester,
+                                      profile.active}))
+                    return srs::core::Result<void>::failure(
+                        srs::core::ErrorCode::INTERNAL_ERROR);
+            }
             return srs::core::Result<void>::success();
         }
     }
@@ -79,9 +113,13 @@ srs::core::Result<void> StudentProfileService::update_student(
 }
 
 srs::core::Result<void> StudentProfileService::deactivate_student(
-    const std::string& srn,
-    UserRole requester) {
-    if (!is_admin(requester)) {
+    const std::string& session_id,
+    const std::string& srn) {
+    const auto username = authentication_.username_for_session(session_id);
+    const auto role = username ? authentication_.role_of(*username.value())
+                               : srs::core::Result<srs::auth::Role>::failure(
+                                     srs::core::ErrorCode::SESSION_ERROR);
+    if (!role || *role.value() != srs::auth::Role::Admin) {
         return srs::core::Result<void>::failure(
             srs::core::ErrorCode::PERMISSION_DENIED);
     }
@@ -89,6 +127,15 @@ srs::core::Result<void> StudentProfileService::deactivate_student(
     for (auto& profile : profiles_) {
         if (profile.srn == srn) {
             profile.active = false;
+            if (database_) {
+                srs::persistence::StudentRepository repository(*database_);
+                if (!repository.save({profile.srn, profile.username, profile.name,
+                                      profile.date_of_birth, profile.contact,
+                                      profile.programme, profile.semester,
+                                      profile.active}))
+                    return srs::core::Result<void>::failure(
+                        srs::core::ErrorCode::INTERNAL_ERROR);
+            }
             authentication_.set_user_active(profile.username, false);
             return srs::core::Result<void>::success();
         }
@@ -98,15 +145,20 @@ srs::core::Result<void> StudentProfileService::deactivate_student(
 }
 
 srs::core::Result<StudentProfile> StudentProfileService::view_own_profile(
-    const std::string& username,
-    UserRole requester) const {
-    if (!is_student(requester)) {
+    const std::string& session_id) const {
+    const auto username = authentication_.username_for_session(session_id);
+    if (!username) {
+        return srs::core::Result<StudentProfile>::failure(
+            srs::core::ErrorCode::SESSION_ERROR);
+    }
+    const auto role = authentication_.role_of(*username.value());
+    if (!role || *role.value() != srs::auth::Role::Student) {
         return srs::core::Result<StudentProfile>::failure(
             srs::core::ErrorCode::PERMISSION_DENIED);
     }
 
     for (const auto& profile : profiles_) {
-        if (profile.username == username && profile.active) {
+        if (profile.username == *username.value() && profile.active) {
             return srs::core::Result<StudentProfile>::success(profile);
         }
     }
@@ -117,9 +169,14 @@ srs::core::Result<StudentProfile> StudentProfileService::view_own_profile(
 
 srs::core::Result<std::vector<StudentProfile>>
 StudentProfileService::search_students(
-    const StudentSearchQuery& query,
-    UserRole requester) const {
-    if (!is_admin(requester) || query.semester < 0) {
+    const std::string& session_id,
+    const StudentSearchQuery& query) const {
+    const auto username = authentication_.username_for_session(session_id);
+    const auto role = username ? authentication_.role_of(*username.value())
+                               : srs::core::Result<srs::auth::Role>::failure(
+                                     srs::core::ErrorCode::SESSION_ERROR);
+    if (!role || *role.value() != srs::auth::Role::Admin ||
+        query.semester < 0) {
         return srs::core::Result<std::vector<StudentProfile>>::failure(
             srs::core::ErrorCode::PERMISSION_DENIED);
     }
