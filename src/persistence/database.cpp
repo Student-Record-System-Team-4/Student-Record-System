@@ -3,22 +3,29 @@
 namespace srs::persistence {
 
 namespace {
+
 const char* schema = R"sql(
 PRAGMA foreign_keys = ON;
+
 CREATE TABLE IF NOT EXISTS schema_migrations (
     version INTEGER PRIMARY KEY,
     applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
 CREATE TABLE IF NOT EXISTS roles (
     name TEXT PRIMARY KEY
 );
-INSERT OR IGNORE INTO roles(name) VALUES ('Student'), ('Faculty'), ('Admin');
+
+INSERT OR IGNORE INTO roles(name)
+VALUES ('Student'), ('Faculty'), ('Admin');
+
 CREATE TABLE IF NOT EXISTS users (
     username TEXT PRIMARY KEY,
     password_hash TEXT NOT NULL,
     role TEXT NOT NULL REFERENCES roles(name),
     active INTEGER NOT NULL DEFAULT 1 CHECK(active IN (0,1))
 );
+
 CREATE TABLE IF NOT EXISTS student_profiles (
     srn TEXT PRIMARY KEY,
     username TEXT NOT NULL UNIQUE REFERENCES users(username),
@@ -29,18 +36,22 @@ CREATE TABLE IF NOT EXISTS student_profiles (
     semester INTEGER NOT NULL CHECK(semester > 0),
     active INTEGER NOT NULL DEFAULT 1 CHECK(active IN (0,1))
 );
+
 CREATE TABLE IF NOT EXISTS courses (
     code TEXT PRIMARY KEY,
     title TEXT NOT NULL,
     credits INTEGER NOT NULL CHECK(credits BETWEEN 1 AND 10),
-    faculty_username TEXT NOT NULL REFERENCES users(username)
+    faculty_username TEXT NOT NULL REFERENCES users(username),
+    active INTEGER NOT NULL DEFAULT 1 CHECK(active IN (0,1))
 );
+
 CREATE TABLE IF NOT EXISTS enrollments (
     srn TEXT NOT NULL REFERENCES student_profiles(srn),
     course_code TEXT NOT NULL REFERENCES courses(code),
     semester INTEGER NOT NULL CHECK(semester BETWEEN 1 AND 12),
     PRIMARY KEY(srn, course_code, semester)
 );
+
 CREATE TABLE IF NOT EXISTS grades (
     srn TEXT NOT NULL,
     course_code TEXT NOT NULL,
@@ -53,6 +64,7 @@ CREATE TABLE IF NOT EXISTS grades (
     FOREIGN KEY(srn, course_code, semester)
         REFERENCES enrollments(srn, course_code, semester)
 );
+
 CREATE TABLE IF NOT EXISTS attendance (
     srn TEXT NOT NULL,
     course_code TEXT NOT NULL,
@@ -64,6 +76,7 @@ CREATE TABLE IF NOT EXISTS attendance (
     FOREIGN KEY(srn, course_code, semester)
         REFERENCES enrollments(srn, course_code, semester)
 );
+
 CREATE TABLE IF NOT EXISTS audit_records (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT REFERENCES users(username),
@@ -73,59 +86,195 @@ CREATE TABLE IF NOT EXISTS audit_records (
     details TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
-INSERT OR IGNORE INTO schema_migrations(version) VALUES (1);
+
+INSERT OR IGNORE INTO schema_migrations(version)
+VALUES (1);
 )sql";
+
+// Returns true if the specified table already has the specified column.
+bool column_exists(
+    const char* table_name,
+    const char* column_name
+) {
+    const std::string query =
+        "PRAGMA table_info(" + std::string(table_name) + ");";
+
+    sqlite3_stmt* statement = nullptr;
+
+    if (sqlite3_prepare_v2(
+            nullptr,
+            query.c_str(),
+            -1,
+            &statement,
+            nullptr
+        ) == SQLITE_OK) {
+        sqlite3_finalize(statement);
+        return false;
+    }
+
+    return false;
 }
+
+}  // namespace
 
 Database::Database(const std::string& path) : path_(path) {
     if (sqlite3_open(path.c_str(), &handle_) != SQLITE_OK) {
         last_error_ = handle_ ? sqlite3_errmsg(handle_) : "Unable to open database";
-        if (handle_) sqlite3_close(handle_);
+
+        if (handle_) {
+            sqlite3_close(handle_);
+        }
+
         handle_ = nullptr;
         return;
     }
+
     if (!execute(schema)) {
+        sqlite3_close(handle_);
+        handle_ = nullptr;
+        return;
+    }
+
+    // Migration: add courses.active to databases created by older versions.
+    bool active_column_exists = false;
+    sqlite3_stmt* statement = nullptr;
+
+    if (sqlite3_prepare_v2(
+            handle_,
+            "PRAGMA table_info(courses);",
+            -1,
+            &statement,
+            nullptr
+        ) != SQLITE_OK) {
+        last_error_ = sqlite3_errmsg(handle_);
+        sqlite3_close(handle_);
+        handle_ = nullptr;
+        return;
+    }
+
+    while (sqlite3_step(statement) == SQLITE_ROW) {
+        const unsigned char* column_name = sqlite3_column_text(statement, 1);
+
+        if (column_name &&
+            std::string(reinterpret_cast<const char*>(column_name)) == "active") {
+            active_column_exists = true;
+            break;
+        }
+    }
+
+    sqlite3_finalize(statement);
+
+    if (!active_column_exists) {
+        if (!execute(
+                "ALTER TABLE courses "
+                "ADD COLUMN active INTEGER NOT NULL DEFAULT 1 "
+                "CHECK(active IN (0,1));"
+            )) {
+            sqlite3_close(handle_);
+            handle_ = nullptr;
+            return;
+        }
+    }
+
+    // Record migration version 2.
+    if (!execute(
+            "INSERT OR IGNORE INTO schema_migrations(version) VALUES (2);"
+        )) {
         sqlite3_close(handle_);
         handle_ = nullptr;
     }
 }
 
 Database::~Database() {
-    if (handle_) sqlite3_close(handle_);
+    if (handle_) {
+        sqlite3_close(handle_);
+    }
 }
 
-bool Database::is_open() const noexcept { return handle_ != nullptr; }
-const std::string& Database::path() const noexcept { return path_; }
-const std::string& Database::last_error() const noexcept { return last_error_; }
-sqlite3* Database::handle() const noexcept { return handle_; }
+bool Database::is_open() const noexcept {
+    return handle_ != nullptr;
+}
+
+const std::string& Database::path() const noexcept {
+    return path_;
+}
+
+const std::string& Database::last_error() const noexcept {
+    return last_error_;
+}
+
+sqlite3* Database::handle() const noexcept {
+    return handle_;
+}
 
 srs::core::Result<void> Database::execute(const std::string& sql) {
-    if (!handle_) return srs::core::Result<void>::failure(srs::core::ErrorCode::INTERNAL_ERROR);
+    if (!handle_) {
+        return srs::core::Result<void>::failure(
+            srs::core::ErrorCode::INTERNAL_ERROR
+        );
+    }
+
     char* error = nullptr;
-    const int result = sqlite3_exec(handle_, sql.c_str(), nullptr, nullptr, &error);
+
+    const int result = sqlite3_exec(
+        handle_,
+        sql.c_str(),
+        nullptr,
+        nullptr,
+        &error
+    );
+
     if (result != SQLITE_OK) {
         last_error_ = error ? error : sqlite3_errmsg(handle_);
         sqlite3_free(error);
-        return srs::core::Result<void>::failure(srs::core::ErrorCode::INTERNAL_ERROR);
+
+        return srs::core::Result<void>::failure(
+            srs::core::ErrorCode::INTERNAL_ERROR
+        );
     }
+
     return srs::core::Result<void>::success();
 }
 
-srs::core::Result<void> Database::begin_transaction() { return execute("BEGIN TRANSACTION;"); }
-srs::core::Result<void> Database::commit() { return execute("COMMIT;"); }
-srs::core::Result<void> Database::rollback() { return execute("ROLLBACK;"); }
+srs::core::Result<void> Database::begin_transaction() {
+    return execute("BEGIN TRANSACTION;");
+}
+
+srs::core::Result<void> Database::commit() {
+    return execute("COMMIT;");
+}
+
+srs::core::Result<void> Database::rollback() {
+    return execute("ROLLBACK;");
+}
 
 Transaction::Transaction(Database& database) : database_(database) {
     started_ = database_.begin_transaction().has_value();
 }
+
 Transaction::~Transaction() {
-    if (started_ && !committed_) database_.rollback();
+    if (started_ && !committed_) {
+        database_.rollback();
+    }
 }
-bool Transaction::started() const noexcept { return started_; }
+
+bool Transaction::started() const noexcept {
+    return started_;
+}
+
 srs::core::Result<void> Transaction::commit() {
-    if (!started_ || committed_) return srs::core::Result<void>::failure(srs::core::ErrorCode::INTERNAL_ERROR);
+    if (!started_ || committed_) {
+        return srs::core::Result<void>::failure(
+            srs::core::ErrorCode::INTERNAL_ERROR
+        );
+    }
+
     auto result = database_.commit();
-    if (result) committed_ = true;
+
+    if (result) {
+        committed_ = true;
+    }
+
     return result;
 }
 

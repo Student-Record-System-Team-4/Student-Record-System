@@ -361,80 +361,146 @@ TEST_CASE("Invalid attendance viewing requests are rejected", "[attendance][F-02
     REQUIRE(f.attendance.view_my_summary(
         f.student1, "CS201", 13).error() == ErrorCode::INVALID_INPUT);
 }
+// F-017: the same session typed differently is still one session.
+TEST_CASE("Session details differing only in case or spaces are one session",
+          "[attendance][F-017][duplicates]") {
+    AttendanceFixture f;
 
-TEST_CASE("Attendance records persist and reload across service restarts", "[attendance][persistence]") {
-    const char* database_path = "srs-attendance-test.db";
-    std::remove(database_path);
+    f.mark("SRN-001", "2026-11-01", "Lecture 1", AttendanceStatus::Present);
+    // A correction typed with different case and stray whitespace.
+    f.mark("SRN-001", "2026-11-01", "  lecture 1 ", AttendanceStatus::Absent);
 
-    {
-        srs::persistence::Database database(database_path);
-        REQUIRE(database.is_open());
+    const auto records = f.attendance.view_my_attendance(f.student1, "CS201");
+    REQUIRE(records);
+    REQUIRE(records.value()->size() == 1);
+    REQUIRE(records.value()->front().session_details == "Lecture 1");
+    REQUIRE(records.value()->front().status == AttendanceStatus::Absent);
 
-        AuthenticationService auth(std::vector<User>{
-            {"admin01", "Admin1234", Role::Admin},
-            {"faculty01", "Teach1234", Role::Faculty},
-            {"student01", "Pass1234", Role::Student}}, database);
-        UserAccountService accounts(auth);
-        StudentProfileService students(auth, database);
-        CourseService courses(accounts, auth, students, database);
+    const auto summary = f.attendance.view_my_summary(f.student1, "CS201", 3);
+    REQUIRE(summary.value()->total_sessions == 1);
+    REQUIRE(summary.value()->present_sessions == 0);
 
-        const auto admin = auth.login("admin01", "Admin1234");
-        REQUIRE(admin != nullptr);
-        REQUIRE(students.register_student(
-            admin->id,
-            StudentProfile{
-                "student01", "Alice Smith", "SRN-001",
-                "2005-01-01", "555-0100",
-                "Computer Science", 3, true
-            }));
-        REQUIRE(courses.create_course(
-            admin->id, Course{"CS201", "Data Structures", 4, "faculty01"}));
-        REQUIRE(courses.enroll_student(
-            admin->id, "SRN-001", "CS201", 3));
+    // A different date or a different session on the same date is separate.
+    f.mark("SRN-001", "2026-11-02", "Lecture 1", AttendanceStatus::Present);
+    f.mark("SRN-001", "2026-11-01", "Lecture 2", AttendanceStatus::Present);
+    REQUIRE(f.attendance.view_my_summary(f.student1, "CS201", 3)
+                .value()->total_sessions == 3);
 
-        AttendanceService attendance(
-            accounts, auth, students, courses, database);
-        const auto faculty = auth.login("faculty01", "Teach1234");
-        REQUIRE(faculty != nullptr);
+    // Another student's entry for the same session is independent.
+    f.mark("SRN-002", "2026-11-01", "Lecture 1", AttendanceStatus::Present);
+    REQUIRE(f.attendance.view_my_summary(f.student2, "CS201", 3)
+                .value()->total_sessions == 1);
+}
 
-        REQUIRE(attendance.mark_attendance(
-            faculty->id, "SRN-001", "CS201", 3,
-            "2026-11-01", "Morning Session", AttendanceStatus::Absent));
-        REQUIRE(attendance.mark_attendance(
-            faculty->id, "SRN-001", "CS201", 3,
-            "2026-11-01", "Morning Session", AttendanceStatus::Present));
+TEST_CASE("Malformed session details are rejected", "[attendance][F-017]") {
+    AttendanceFixture f;
+
+    const std::vector<std::string> bad = {
+        "", "   ", "\t", "Line1\nLine2", std::string("Bell\x07", 5),
+        std::string(101, 'x')};
+
+    for (const auto& details : bad) {
+        const auto result = f.attendance.mark_attendance(
+            f.faculty1, "SRN-001", "CS201", 3, "2026-11-01", details,
+            AttendanceStatus::Present);
+        REQUIRE_FALSE(result);
+        REQUIRE(result.error() == ErrorCode::INVALID_INPUT);
     }
 
-    {
-        srs::persistence::Database database(database_path);
-        REQUIRE(database.is_open());
+    REQUIRE(f.attendance.view_my_attendance(f.student1, "CS201")
+                .value()->empty());
 
-        AuthenticationService auth(std::vector<User>{
-            {"admin01", "Admin1234", Role::Admin},
-            {"faculty01", "Teach1234", Role::Faculty},
-            {"student01", "Pass1234", Role::Student}}, database);
-        UserAccountService accounts(auth);
-        StudentProfileService students(auth, database);
-        CourseService courses(accounts, auth, students, database);
-        AttendanceService attendance(
-            accounts, auth, students, courses, database);
+    // The length limit itself is accepted.
+    f.mark("SRN-001", "2026-11-01", std::string(100, 'x'),
+           AttendanceStatus::Present);
+    REQUIRE(f.attendance.view_my_attendance(f.student1, "CS201")
+                .value()->size() == 1);
+}
 
-        const auto student = auth.login("student01", "Pass1234");
-        REQUIRE(student != nullptr);
+// F-018: exact integer rounding.
+TEST_CASE("Attendance percentage rounds exact halves up",
+          "[attendance][F-018]") {
+    AttendanceFixture f;
 
-        const auto records =
-            attendance.view_my_attendance(student->id, "CS201");
-        REQUIRE(records);
-        REQUIRE(records.value()->size() == 1);
-        REQUIRE(records.value()->front().status == AttendanceStatus::Present);
-
-        const auto summary =
-            attendance.view_my_summary(student->id, "CS201", 3);
-        REQUIRE(summary);
-        REQUIRE(summary.value()->total_sessions == 1);
-        REQUIRE(summary.value()->present_sessions == 1);
-        REQUIRE(summary.value()->percentage == 100.0);
+    // 23 of 160 sessions = 14.375% exactly. Floating-point rounding gives
+    // 14.37; the correct result is 14.38.
+    for (int i = 1; i <= 160; ++i) {
+        f.mark("SRN-001", "2026-11-01", "Session " + std::to_string(i),
+               i <= 23 ? AttendanceStatus::Present : AttendanceStatus::Absent);
     }
 
-    std::remove(database_path);
+    const auto summary = f.attendance.view_my_summary(f.student1, "CS201", 3);
+    REQUIRE(summary);
+    REQUIRE(summary.value()->total_sessions == 160);
+    REQUIRE(summary.value()->present_sessions == 23);
+    REQUIRE(summary.value()->percentage == 14.38);
+}
+
+TEST_CASE("Perfect and zero attendance are exact", "[attendance][F-018]") {
+    AttendanceFixture f;
+
+    f.mark("SRN-001", "2026-11-01", "Session 1", AttendanceStatus::Present);
+    f.mark("SRN-001", "2026-11-02", "Session 2", AttendanceStatus::Present);
+    f.mark("SRN-002", "2026-11-01", "Session 1", AttendanceStatus::Absent);
+    f.mark("SRN-002", "2026-11-02", "Session 2", AttendanceStatus::Late);
+
+    const auto alice = f.attendance.view_my_summary(f.student1, "CS201", 3);
+    REQUIRE(alice.value()->percentage == 100.0);
+    REQUIRE_FALSE(alice.value()->below_threshold);
+
+    const auto bob = f.attendance.view_my_summary(f.student2, "CS201", 3);
+    REQUIRE(bob.value()->percentage == 0.0);
+    REQUIRE(bob.value()->below_threshold);
+}
+
+// F-019: threshold comparison uses the exact ratio and ignores empty history.
+TEST_CASE("Students with no recorded sessions are not flagged",
+          "[attendance][F-019]") {
+    AttendanceFixture f;
+
+    const auto summary = f.attendance.view_my_summary(f.student1, "CS201", 3);
+    REQUIRE(summary);
+    REQUIRE(summary.value()->total_sessions == 0);
+    REQUIRE(summary.value()->percentage == 0.0);
+    REQUIRE_FALSE(summary.value()->below_threshold);
+}
+
+TEST_CASE("Threshold is compared against the exact percentage",
+          "[attendance][F-019]") {
+    AttendanceFixture f;
+    REQUIRE(f.attendance.set_threshold(f.admin, 66.67));
+
+    // 2 of 3 = 66.666...% is below 66.67 even though it displays as 66.67.
+    f.mark("SRN-001", "2026-11-01", "Session 1", AttendanceStatus::Present);
+    f.mark("SRN-001", "2026-11-02", "Session 2", AttendanceStatus::Present);
+    f.mark("SRN-001", "2026-11-03", "Session 3", AttendanceStatus::Absent);
+
+    const auto summary = f.attendance.view_my_summary(f.student1, "CS201", 3);
+    REQUIRE(summary.value()->percentage == 66.67);
+    REQUIRE(summary.value()->below_threshold);
+}
+
+// F-020: records only count while the enrollment exists.
+TEST_CASE("Attendance of a removed enrollment is hidden and cannot be edited",
+          "[attendance][F-020]") {
+    AttendanceFixture f;
+    REQUIRE(f.courses.enroll_student(f.admin, "SRN-001", "CS201", 4));
+
+    f.mark("SRN-001", "2026-11-01", "Session 1", AttendanceStatus::Present);
+    REQUIRE(f.attendance.mark_attendance(
+        f.faculty1, "SRN-001", "CS201", 4, "2026-11-02", "Session 1",
+        AttendanceStatus::Absent));
+
+    REQUIRE(f.courses.remove_student(f.admin, "SRN-001", "CS201", 3));
+
+    const auto records = f.attendance.view_my_attendance(f.student1, "CS201");
+    REQUIRE(records);
+    REQUIRE(records.value()->size() == 1);
+    REQUIRE(records.value()->front().semester == 4);
+
+    REQUIRE(f.attendance.view_my_summary(f.student1, "CS201", 3).error() ==
+            ErrorCode::NOT_FOUND);
+    REQUIRE(f.attendance.mark_attendance(
+                f.faculty1, "SRN-001", "CS201", 3, "2026-11-03", "Session 2",
+                AttendanceStatus::Present).error() == ErrorCode::NOT_FOUND);
 }

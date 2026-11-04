@@ -3,6 +3,7 @@
 #include <cmath>
 #include <limits>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "auth/authentication.h"
@@ -285,4 +286,119 @@ TEST_CASE("Students only see their own grades", "[grades][rbac]") {
     REQUIRE(f.grades.view_my_grades("forged").error() == ErrorCode::SESSION_ERROR);
     REQUIRE(f.grades.view_student_grades("forged", "SRN-001").error() ==
             ErrorCode::SESSION_ERROR);
+}
+
+TEST_CASE("GPA rounds exact halves up", "[grades][gpa]") {
+    Fixture f;
+
+    // credits 1/9/10/10/10 with grades E/D/F/E/D:
+    // (1*5 + 9*6 + 10*0 + 10*5 + 10*6) / 40 = 169 / 40 = 4.225 exactly.
+    // Floating-point rounding of 4.225 gives 4.22; the correct result is 4.23.
+    const std::vector<std::pair<int, std::string>> extra = {
+        {1, "E"}, {9, "D"}, {10, "F"}, {10, "E"}, {10, "D"}};
+
+    int index = 0;
+    for (const auto& item : extra) {
+        const std::string code = "CS30" + std::to_string(++index);
+        REQUIRE(f.courses.create_course(
+            f.admin, Course{code, "Elective", item.first, "faculty01"}));
+        REQUIRE(f.courses.enroll_student(f.admin, "SRN-002", code, 3));
+        REQUIRE(f.grades.enter_letter_grade(
+            f.faculty1, "SRN-002", code, 3, item.second));
+    }
+
+    const auto summary = f.grades.view_student_summary(f.admin, "SRN-002");
+    REQUIRE(summary);
+    REQUIRE(summary.value()->total_credits == 40);
+    REQUIRE(summary.value()->semesters.size() == 1);
+    REQUIRE(summary.value()->semesters[0].gpa == 4.23);
+    REQUIRE(summary.value()->cgpa == 4.23);
+}
+
+TEST_CASE("Ungraded enrollments do not affect GPA or CGPA", "[grades][gpa]") {
+    Fixture f;
+
+    // Alice is enrolled in three courses but only one is graded.
+    REQUIRE(f.grades.enter_marks(f.faculty1, "SRN-001", "CS201", 3, 85));  // A=9, 4cr
+
+    const auto summary = f.grades.view_my_summary(f.alice);
+    REQUIRE(summary);
+    REQUIRE(summary.value()->total_credits == 4);
+    REQUIRE(summary.value()->semesters.size() == 1);
+    REQUIRE(summary.value()->cgpa == 9.0);
+}
+
+TEST_CASE("Grades without an enrollment are not reported or counted",
+          "[grades][gpa]") {
+    Fixture f;
+    REQUIRE(f.grades.enter_marks(f.faculty1, "SRN-001", "CS201", 3, 95));  // S=10, 4cr
+    REQUIRE(f.grades.enter_letter_grade(f.faculty2, "SRN-001", "CS202", 3, "B"));  // 8, 3cr
+
+    REQUIRE(f.courses.remove_student(f.admin, "SRN-001", "CS201", 3));
+
+    // The removed enrollment's grade no longer appears or counts.
+    const auto grades = f.grades.view_my_grades(f.alice);
+    REQUIRE(grades);
+    REQUIRE(grades.value()->size() == 1);
+    REQUIRE(grades.value()->front().course_code == "CS202");
+
+    const auto summary = f.grades.view_my_summary(f.alice);
+    REQUIRE(summary.value()->total_credits == 3);
+    REQUIRE(summary.value()->cgpa == 8.0);
+
+    // And no new grade can be entered for it.
+    REQUIRE(f.grades.enter_marks(f.faculty1, "SRN-001", "CS201", 3, 70).error() ==
+            ErrorCode::NOT_FOUND);
+}
+
+TEST_CASE("Out-of-range and malformed grade values are rejected",
+          "[grades][validation]") {
+    Fixture f;
+    const double inf = std::numeric_limits<double>::infinity();
+
+    for (double bad : {inf, -inf}) {
+        REQUIRE(f.grades.enter_marks(f.faculty1, "SRN-001", "CS201", 3, bad).error() ==
+                ErrorCode::INVALID_INPUT);
+    }
+
+    for (const std::string bad : {"", "AA", "A+", " A", "A ", "G", "1", "SS"}) {
+        REQUIRE(f.grades.enter_letter_grade(
+                    f.faculty1, "SRN-001", "CS201", 3, bad).error() ==
+                ErrorCode::INVALID_INPUT);
+    }
+
+    // Nothing was stored by any of the rejected calls.
+    REQUIRE(f.grades.view_my_grades(f.alice).value()->empty());
+    REQUIRE(f.grades.view_my_summary(f.alice).value()->cgpa == 0.0);
+
+    // Boundary values are accepted.
+    REQUIRE(f.grades.enter_marks(f.faculty1, "SRN-001", "CS201", 3, 0));
+    REQUIRE(f.grades.enter_marks(f.faculty1, "SRN-001", "CS201", 3, 100));
+    REQUIRE(f.grades.view_my_grades(f.alice).value()->front().letter == "S");
+}
+
+TEST_CASE("Only people with the right role can enter or view grades",
+          "[grades][rbac]") {
+    Fixture f;
+
+    // Students and admins cannot enter or change grades.
+    for (const auto& session : {f.alice, f.admin}) {
+        REQUIRE(f.grades.enter_marks(session, "SRN-001", "CS201", 3, 90).error() ==
+                ErrorCode::PERMISSION_DENIED);
+        REQUIRE(f.grades.enter_letter_grade(session, "SRN-001", "CS201", 3, "A").error() ==
+                ErrorCode::PERMISSION_DENIED);
+    }
+
+    REQUIRE(f.grades.enter_marks("forged", "SRN-001", "CS201", 3, 90).error() ==
+            ErrorCode::SESSION_ERROR);
+
+    // Faculty have no view access to another student's grades; students
+    // cannot use the admin views.
+    REQUIRE(f.grades.enter_marks(f.faculty1, "SRN-001", "CS201", 3, 90));
+    REQUIRE(f.grades.view_student_grades(f.faculty1, "SRN-001").error() ==
+            ErrorCode::PERMISSION_DENIED);
+    REQUIRE(f.grades.view_student_summary(f.alice, "SRN-001").error() ==
+            ErrorCode::PERMISSION_DENIED);
+    REQUIRE(f.grades.view_my_grades(f.faculty1).error() ==
+            ErrorCode::PERMISSION_DENIED);
 }
