@@ -2,7 +2,7 @@
 #define STUDENT_RECORD_SYSTEM_UI_CLI_H
 
 #include <iosfwd>
-#include <optional>
+#include <utility>
 #include <string>
 #include <vector>
 
@@ -14,8 +14,31 @@
 #include "course/course_service.h"
 #include "grades/grade_service.h"
 #include "student/student_profiles.h"
+#include "reports/report_service.h"
 
 namespace srs::ui {
+
+struct NullOpt {};
+constexpr NullOpt nullopt{};
+
+template <typename T>
+class Optional {
+public:
+    Optional() = default;
+    Optional(NullOpt) {}
+    Optional(const T& value) : value_(value), present_(true) {}
+    Optional(T&& value) : value_(std::move(value)), present_(true) {}
+
+    explicit operator bool() const { return present_; }
+    T& operator*() { return value_; }
+    const T& operator*() const { return value_; }
+    T* operator->() { return &value_; }
+    const T* operator->() const { return &value_; }
+
+private:
+    T value_{};
+    bool present_ = false;
+};
 
 // Everything the CLI talks to. The CLI holds no business rules of its own: it
 // prompts, calls these services and prints what they return. Which menu
@@ -28,11 +51,12 @@ struct Services {
     srs::course::CourseService& courses;
     srs::grades::GradeService& grades;
     srs::attendance::AttendanceService& attendance;
+    srs::reports::ReportService& reports;
 };
 
 // First-run setup: asks for the initial administrator's credentials. Returns
 // nullopt if input ends or the user gives up.
-std::optional<srs::auth::User> prompt_first_admin(
+Optional<srs::auth::User> prompt_first_admin(
     std::istream& in, std::ostream& out);
 
 class Cli {
@@ -47,7 +71,7 @@ private:
 
     struct Item {
         const char* label;
-        std::optional<srs::auth::Permission> required;  // none = any user
+        Optional<srs::auth::Permission> required;  // none = any user
         Action action;
     };
 
@@ -63,15 +87,15 @@ private:
     void log_out();
 
     // --- prompts ---------------------------------------------------------
-    std::optional<std::string> text(const std::string& label);
-    std::optional<std::string> secret(const std::string& label);
-    std::optional<int> integer(const std::string& label, bool blank_is_zero = false);
-    std::optional<double> number(const std::string& label);
-    std::optional<std::string> text_or(const std::string& label, const std::string& current);
-    std::optional<int> integer_or(const std::string& label, int current);
-    std::optional<srs::auth::Role> role_choice(const std::string& label);
+    Optional<std::string> text(const std::string& label);
+    Optional<std::string> secret(const std::string& label);
+    Optional<int> integer(const std::string& label, bool blank_is_zero = false);
+    Optional<double> number(const std::string& label);
+    Optional<std::string> text_or(const std::string& label, const std::string& current);
+    Optional<int> integer_or(const std::string& label, int current);
+    Optional<srs::auth::Role> role_choice(const std::string& label);
     bool confirm(const std::string& what);
-    std::optional<int> menu_choice(const std::string& prompt);
+    Optional<int> menu_choice(const std::string& prompt);
 
     // --- output ----------------------------------------------------------
     void fail(srs::core::ErrorCode error);
@@ -82,7 +106,8 @@ private:
     void print_grades(const std::vector<srs::grades::GradeRecord>& grades);
     void print_summary(const srs::grades::AcademicSummary& summary);
     void print_attendance_summary(const srs::attendance::AttendanceSummary& summary);
-    std::optional<srs::student::StudentProfile> find_student(const std::string& srn);
+    void print_report(const srs::reports::StudentAcademicReport& report);
+    Optional<srs::student::StudentProfile> find_student(const std::string& srn);
 
     // --- students --------------------------------------------------------
     void view_my_profile();

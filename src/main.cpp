@@ -9,6 +9,7 @@
 #include "grades/grade_service.h"
 #include "persistence/database.h"
 #include "persistence/repositories.h"
+#include "reports/report_service.h"
 #include "student/student_profiles.h"
 #include "ui/cli.h"
 
@@ -51,9 +52,11 @@ int main(int argc, char** argv) {
     srs::grades::GradeService grades(accounts, authentication, students, courses, database);
     srs::attendance::AttendanceService attendance(
         accounts, authentication, students, courses, database);
+    srs::reports::ReportService reports(
+        accounts, authentication, students, courses, grades, attendance);
 
     srs::ui::Cli cli(
-        {accounts, authentication, students, courses, grades, attendance},
+        {accounts, authentication, students, courses, grades, attendance, reports},
         std::cin, std::cout);
     return cli.run();
 }

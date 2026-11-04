@@ -3,11 +3,13 @@
 #include <algorithm>
 #include <cctype>
 #include <cmath>
+#include <cstdio>
 #include <cstdlib>
 #include <iomanip>
 #include <iostream>
 #include <set>
 #include <sstream>
+#include <stdio.h>
 #include <utility>
 
 #include "core/application.h"
@@ -38,7 +40,10 @@ namespace {
 
 bool stdin_is_terminal() {
 #ifdef _WIN32
-    return _isatty(_fileno(stdin)) != 0;
+    HANDLE handle = GetStdHandle(STD_INPUT_HANDLE);
+    DWORD mode = 0;
+    return handle != INVALID_HANDLE_VALUE &&
+           GetConsoleMode(handle, &mode) != 0;
 #else
     return isatty(STDIN_FILENO) != 0;
 #endif
@@ -128,34 +133,34 @@ std::string lower(std::string value) {
 
 // Syntax only: "is this text a whole number / a finite number?". Whether the
 // value is acceptable (range, semester, marks...) is the services' decision.
-std::optional<int> parse_int(const std::string& text) {
+Optional<int> parse_int(const std::string& text) {
     if (text.empty() || text.size() > 10) {
-        return std::nullopt;
+        return nullopt;
     }
     std::size_t i = (text[0] == '-' || text[0] == '+') ? 1 : 0;
     if (i == text.size()) {
-        return std::nullopt;
+        return nullopt;
     }
     for (std::size_t j = i; j < text.size(); ++j) {
         if (!std::isdigit(static_cast<unsigned char>(text[j]))) {
-            return std::nullopt;
+            return nullopt;
         }
     }
     const long long value = std::strtoll(text.c_str(), nullptr, 10);
     if (value < -2000000000LL || value > 2000000000LL) {
-        return std::nullopt;
+        return nullopt;
     }
     return static_cast<int>(value);
 }
 
-std::optional<double> parse_double(const std::string& text) {
+Optional<double> parse_double(const std::string& text) {
     if (text.empty()) {
-        return std::nullopt;
+        return nullopt;
     }
     char* end = nullptr;
     const double value = std::strtod(text.c_str(), &end);
     if (end != text.c_str() + text.size() || !std::isfinite(value)) {
-        return std::nullopt;
+        return nullopt;
     }
     return value;
 }
@@ -214,7 +219,7 @@ const char* attendance_label(srs::attendance::AttendanceStatus status) {
 // First-run setup
 // ---------------------------------------------------------------------------
 
-std::optional<srs::auth::User> prompt_first_admin(
+Optional<srs::auth::User> prompt_first_admin(
     std::istream& in, std::ostream& out) {
     out << "No user accounts exist yet. Create the first administrator.\n";
 
@@ -225,17 +230,17 @@ std::optional<srs::auth::User> prompt_first_admin(
 
         out << "Admin username: " << std::flush;
         if (!std::getline(in, username)) {
-            return std::nullopt;
+            return nullopt;
         }
         username = trim(username);
 
         out << "Admin password: " << std::flush;
         if (!read_secret_line(in, out, password)) {
-            return std::nullopt;
+            return nullopt;
         }
         out << "Confirm password: " << std::flush;
         if (!read_secret_line(in, out, confirmation)) {
-            return std::nullopt;
+            return nullopt;
         }
 
         if (password != confirmation) {
@@ -255,7 +260,7 @@ std::optional<srs::auth::User> prompt_first_admin(
     }
 
     out << "Too many invalid attempts.\n";
-    return std::nullopt;
+    return nullopt;
 }
 
 // ---------------------------------------------------------------------------
@@ -301,7 +306,7 @@ Cli::Cli(Services services, std::istream& in, std::ostream& out)
           {"Activate or deactivate a user", Permission::ManageUsers, &Cli::set_user_active},
           {"Reset a user's password", Permission::ManageUsers, &Cli::reset_user_password}}},
         {"My account",
-         {{"Change my password", std::nullopt, &Cli::change_my_password}}}};
+         {{"Change my password", nullopt, &Cli::change_my_password}}}};
 }
 
 // ---------------------------------------------------------------------------
@@ -455,33 +460,33 @@ void Cli::log_out() {
 // Prompts
 // ---------------------------------------------------------------------------
 
-std::optional<std::string> Cli::text(const std::string& label) {
+Optional<std::string> Cli::text(const std::string& label) {
     out_ << label << ": " << std::flush;
     std::string line;
     if (!std::getline(in_, line)) {
         eof_ = true;
         out_ << '\n';
-        return std::nullopt;
+        return nullopt;
     }
     strip_carriage_return(line);
     return trim(line);
 }
 
-std::optional<std::string> Cli::secret(const std::string& label) {
+Optional<std::string> Cli::secret(const std::string& label) {
     out_ << label << ": " << std::flush;
     std::string line;
     if (!read_secret_line(in_, out_, line)) {
         eof_ = true;
         out_ << '\n';
-        return std::nullopt;
+        return nullopt;
     }
     return line;
 }
 
-std::optional<int> Cli::integer(const std::string& label, bool blank_is_zero) {
+Optional<int> Cli::integer(const std::string& label, bool blank_is_zero) {
     const auto line = text(label);
     if (!line) {
-        return std::nullopt;
+        return nullopt;
     }
     if (line->empty() && blank_is_zero) {
         return 0;
@@ -489,37 +494,37 @@ std::optional<int> Cli::integer(const std::string& label, bool blank_is_zero) {
     const auto value = parse_int(*line);
     if (!value) {
         out_ << "Invalid number. Cancelled.\n";
-        return std::nullopt;
+        return nullopt;
     }
     return value;
 }
 
-std::optional<double> Cli::number(const std::string& label) {
+Optional<double> Cli::number(const std::string& label) {
     const auto line = text(label);
     if (!line) {
-        return std::nullopt;
+        return nullopt;
     }
     const auto value = parse_double(*line);
     if (!value) {
         out_ << "Invalid number. Cancelled.\n";
-        return std::nullopt;
+        return nullopt;
     }
     return value;
 }
 
-std::optional<std::string> Cli::text_or(
+Optional<std::string> Cli::text_or(
     const std::string& label, const std::string& current) {
     const auto line = text(label + " [" + current + "]");
     if (!line) {
-        return std::nullopt;
+        return nullopt;
     }
     return line->empty() ? current : *line;
 }
 
-std::optional<int> Cli::integer_or(const std::string& label, int current) {
+Optional<int> Cli::integer_or(const std::string& label, int current) {
     const auto line = text(label + " [" + std::to_string(current) + "]");
     if (!line) {
-        return std::nullopt;
+        return nullopt;
     }
     if (line->empty()) {
         return current;
@@ -527,22 +532,22 @@ std::optional<int> Cli::integer_or(const std::string& label, int current) {
     const auto value = parse_int(*line);
     if (!value) {
         out_ << "Invalid number. Cancelled.\n";
-        return std::nullopt;
+        return nullopt;
     }
     return value;
 }
 
-std::optional<Role> Cli::role_choice(const std::string& label) {
+Optional<Role> Cli::role_choice(const std::string& label) {
     const auto line = text(label + " (student/faculty/admin)");
     if (!line) {
-        return std::nullopt;
+        return nullopt;
     }
     const std::string answer = lower(*line);
     if (answer == "student") return Role::Student;
     if (answer == "faculty") return Role::Faculty;
     if (answer == "admin") return Role::Admin;
     out_ << "Unknown role. Cancelled.\n";
-    return std::nullopt;
+    return nullopt;
 }
 
 bool Cli::confirm(const std::string& what) {
@@ -556,15 +561,15 @@ bool Cli::confirm(const std::string& what) {
     return false;
 }
 
-std::optional<int> Cli::menu_choice(const std::string& prompt) {
+Optional<int> Cli::menu_choice(const std::string& prompt) {
     const auto line = text(prompt);
     if (!line) {
-        return std::nullopt;
+        return nullopt;
     }
     const auto value = parse_int(*line);
     if (!value) {
         out_ << "Invalid choice. Please enter one of the listed options.\n";
-        return std::nullopt;
+        return nullopt;
     }
     return value;
 }
@@ -665,14 +670,32 @@ void Cli::print_attendance_summary(
          << '\n';
 }
 
-std::optional<srs::student::StudentProfile> Cli::find_student(
+void Cli::print_report(
+    const srs::reports::StudentAcademicReport& report) {
+    out_ << "\n===== Academic report =====\n\nProfile\n";
+    print_profile(report.profile);
+    out_ << "\nGrades\n";
+    print_grades(report.grades);
+    out_ << "\nGPA and CGPA\n";
+    print_summary(report.academic_summary);
+    out_ << "\nAttendance\n";
+    if (report.attendance.empty()) {
+        out_ << "  No attendance records.\n";
+    } else {
+        for (const auto& summary : report.attendance) {
+            print_attendance_summary(summary);
+        }
+    }
+}
+
+Optional<srs::student::StudentProfile> Cli::find_student(
     const std::string& srn) {
     srs::student::StudentSearchQuery query;
     query.srn = srn;
     const auto result = services_.students.search_students(session_, query);
     if (!result) {
         fail(result.error());
-        return std::nullopt;
+        return nullopt;
     }
     for (const auto& profile : *result.value()) {
         if (profile.srn == srn) {
@@ -680,7 +703,7 @@ std::optional<srs::student::StudentProfile> Cli::find_student(
         }
     }
     out_ << "No student found with that SRN.\n";
-    return std::nullopt;
+    return nullopt;
 }
 
 // ---------------------------------------------------------------------------
@@ -1064,71 +1087,28 @@ void Cli::set_attendance_threshold() {
 // ---------------------------------------------------------------------------
 
 void Cli::my_report() {
-    const auto profile = services_.students.view_own_profile(session_);
-    if (!profile) {
-        fail(profile.error());
+    const auto report = services_.reports.generate_my_report(session_);
+    if (!report) {
+        fail(report.error());
         return;
     }
-    const auto grades = services_.grades.view_my_grades(session_);
-    if (!grades) {
-        fail(grades.error());
-        return;
-    }
-    const auto summary = services_.grades.view_my_summary(session_);
-    if (!summary) {
-        fail(summary.error());
-        return;
-    }
-
-    out_ << "\n===== Academic report =====\n\nProfile\n";
-    print_profile(*profile.value());
-    out_ << "\nGrades\n";
-    print_grades(*grades.value());
-    out_ << "\nGPA and CGPA\n";
-    print_summary(*summary.value());
-
-    // Attendance for the courses that appear in the grade list.
-    std::set<std::pair<std::string, int>> courses;
-    for (const auto& g : *grades.value()) {
-        courses.insert({g.course_code, g.semester});
-    }
-    out_ << "\nAttendance (graded courses)\n";
-    bool any = false;
-    for (const auto& entry : courses) {
-        const auto attendance = services_.attendance.view_my_summary(
-            session_, entry.first, entry.second);
-        if (attendance && attendance.value()->total_sessions > 0) {
-            print_attendance_summary(*attendance.value());
-            any = true;
-        }
-    }
-    if (!any) {
-        out_ << "  No attendance recorded for graded courses.\n";
-    }
-    out_ << "\nFor other courses use Attendance > View my attendance.\n";
+    print_report(*report.value());
 }
 
 void Cli::student_report() {
     const auto srn = text("Student SRN");
     if (!srn) return;
-    const auto profile = find_student(*srn);
-    if (!profile) return;
-    const auto grades = services_.grades.view_student_grades(session_, *srn);
-    if (!grades) {
-        fail(grades.error());
+    const auto report =
+        services_.reports.generate_student_report(session_, *srn);
+    if (!report) {
+        if (report.error() == ErrorCode::NOT_FOUND) {
+            out_ << "No student found with that SRN.\n";
+            return;
+        }
+        fail(report.error());
         return;
     }
-    const auto summary = services_.grades.view_student_summary(session_, *srn);
-    if (!summary) {
-        fail(summary.error());
-        return;
-    }
-    out_ << "\n===== Academic report =====\n\nProfile\n";
-    print_profile(*profile);
-    out_ << "\nGrades\n";
-    print_grades(*grades.value());
-    out_ << "\nGPA and CGPA\n";
-    print_summary(*summary.value());
+    print_report(*report.value());
 }
 
 // ---------------------------------------------------------------------------

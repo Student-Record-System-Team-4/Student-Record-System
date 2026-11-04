@@ -10,6 +10,7 @@
 #include "course/course_service.h"
 #include "grades/grade_service.h"
 #include "student/student_profiles.h"
+#include "reports/report_service.h"
 #include "ui/cli.h"
 
 // The CLI is driven with scripted input and its output is captured. The
@@ -41,6 +42,8 @@ struct World {
     CourseService courses{accounts, auth, students};
     GradeService grades{accounts, auth, students, courses};
     AttendanceService attendance{accounts, auth, students, courses};
+    srs::reports::ReportService reports{
+        accounts, auth, students, courses, grades, attendance};
 
     // Seeds data through the services (not through the CLI) for tests that
     // are about something else.
@@ -69,7 +72,8 @@ struct World {
         }
         std::istringstream in(script);
         std::ostringstream out;
-        srs::ui::Cli cli({accounts, auth, students, courses, grades, attendance},
+        srs::ui::Cli cli({accounts, auth, students, courses, grades, attendance,
+                          reports},
                          in, out);
         const int code = cli.run();
         if (exit_code) {

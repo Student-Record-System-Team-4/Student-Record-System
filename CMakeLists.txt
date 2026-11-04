@@ -58,6 +58,7 @@ add_library(srs_core STATIC
     src/course/course_service.cpp
     src/grades/grade_service.cpp
     src/attendance/attendance_service.cpp
+    src/reports/report_service.cpp
     src/persistence/database.cpp
     src/persistence/repositories.cpp
     src/ui/cli.cpp
