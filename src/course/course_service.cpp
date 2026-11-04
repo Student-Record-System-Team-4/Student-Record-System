@@ -1,3 +1,4 @@
+```cpp
 #include "course/course_service.h"
 
 #include <algorithm>
@@ -27,6 +28,7 @@ CourseService::CourseService(
     srs::student::StudentProfileService& students,
     srs::persistence::Database& database)
     : CourseService(accounts, authentication, students) {
+
     database_ = &database;
 
     srs::persistence::CourseRepository course_repository(database);
@@ -100,13 +102,13 @@ bool CourseService::valid_faculty(const std::string& username) const {
 Result<srs::student::StudentProfile> CourseService::find_active_student(
     const std::string& session_id,
     const std::string& srn) const {
+
     using srs::student::StudentProfile;
 
     if (srn.empty()) {
         return Result<StudentProfile>::failure(ErrorCode::INVALID_INPUT);
     }
 
-    // search_students matches substrings, so check for an exact SRN.
     srs::student::StudentSearchQuery query;
     query.srn = srn;
 
@@ -128,6 +130,7 @@ Result<srs::student::StudentProfile> CourseService::find_active_student(
 Result<void> CourseService::create_course(
     const std::string& session_id,
     const Course& course) {
+
     const auto allowed =
         accounts_.authorize(session_id, Permission::ManageCourses);
 
@@ -158,12 +161,14 @@ Result<void> CourseService::create_course(
     }
 
     courses_[course.code] = course;
+
     return Result<void>::success();
 }
 
 Result<void> CourseService::update_course(
     const std::string& session_id,
     const Course& course) {
+
     const auto allowed =
         accounts_.authorize(session_id, Permission::ManageCourses);
 
@@ -196,12 +201,14 @@ Result<void> CourseService::update_course(
     }
 
     existing->second = course;
+
     return Result<void>::success();
 }
 
 Result<void> CourseService::deactivate_course(
     const std::string& session_id,
     const std::string& course_code) {
+
     const auto allowed =
         accounts_.authorize(session_id, Permission::ManageCourses);
 
@@ -234,6 +241,7 @@ Result<void> CourseService::deactivate_course(
 
 Result<std::vector<Course>> CourseService::list_courses(
     const std::string& session_id) const {
+
     using CourseList = std::vector<Course>;
 
     std::vector<Course> result;
@@ -273,6 +281,7 @@ Result<void> CourseService::enroll_student(
     const std::string& srn,
     const std::string& course_code,
     int semester) {
+
     const auto allowed =
         accounts_.authorize(session_id, Permission::EnrollStudents);
 
@@ -313,6 +322,7 @@ Result<void> CourseService::enroll_student(
     }
 
     enrollments_.push_back({srn, course_code, semester});
+
     return Result<void>::success();
 }
 
@@ -321,6 +331,7 @@ Result<void> CourseService::remove_student(
     const std::string& srn,
     const std::string& course_code,
     int semester) {
+
     const auto allowed =
         accounts_.authorize(session_id, Permission::EnrollStudents);
 
@@ -365,6 +376,7 @@ Result<std::vector<RosterEntry>> CourseService::view_roster(
     const std::string& session_id,
     const std::string& course_code,
     int semester) const {
+
     using Roster = std::vector<RosterEntry>;
 
     const auto allowed =
@@ -414,13 +426,14 @@ Result<std::vector<RosterEntry>> CourseService::view_roster(
             find_active_student(session_id, enrollment.srn);
 
         if (!student) {
-            continue;  // Deactivated students do not appear on the roster.
+            continue;
         }
 
         roster.push_back({
             enrollment.srn,
             student.value()->name,
-            enrollment.semester
+            enrollment.semester,
+            enrollment.course_code
         });
     }
 
@@ -438,6 +451,7 @@ Result<std::vector<RosterEntry>> CourseService::view_roster(
 
 Result<Course> CourseService::get_course(
     const std::string& course_code) const {
+
     const auto course = courses_.find(course_code);
 
     if (course == courses_.end()) {
@@ -451,6 +465,7 @@ bool CourseService::is_enrolled(
     const std::string& srn,
     const std::string& course_code,
     int semester) const {
+
     for (const auto& enrollment : enrollments_) {
         if (enrollment.srn == srn &&
             enrollment.course_code == course_code &&
@@ -465,10 +480,116 @@ bool CourseService::is_enrolled(
 bool CourseService::is_assigned_faculty(
     const std::string& username,
     const std::string& course_code) const {
+
     const auto course = courses_.find(course_code);
 
     return course != courses_.end() &&
            course->second.faculty_username == username;
 }
 
+// F-021: Student views only their own course enrollments.
+// Admin can view any student's enrollments.
+Result<std::vector<RosterEntry>> CourseService::view_student_enrollments(
+    const std::string& session_id,
+    const std::string& srn) const {
+
+    using Roster = std::vector<RosterEntry>;
+
+    if (srn.empty()) {
+        return Result<Roster>::failure(ErrorCode::INVALID_INPUT);
+    }
+
+    const auto username =
+        authentication_.username_for_session(session_id);
+
+    if (!username) {
+        return Result<Roster>::failure(ErrorCode::SESSION_ERROR);
+    }
+
+    const auto role =
+        authentication_.role_of(*username.value());
+
+    if (!role) {
+        return Result<Roster>::failure(role.error());
+    }
+
+    if (*role.value() == Role::Student) {
+        const auto allowed =
+            accounts_.authorize(session_id, Permission::ViewOwnReports);
+
+        if (!allowed) {
+            return Result<Roster>::failure(allowed.error());
+        }
+
+        const auto profile = students_.view_own_profile(
+            *username.value(),
+            srs::student::UserRole::Student);
+
+        if (!profile) {
+            return Result<Roster>::failure(profile.error());
+        }
+
+        if (profile.value()->srn != srn) {
+            return Result<Roster>::failure(ErrorCode::PERMISSION_DENIED);
+        }
+    } else if (*role.value() == Role::Admin) {
+        const auto allowed =
+            accounts_.authorize(
+                session_id,
+                Permission::GenerateInstitutionReports);
+
+        if (!allowed) {
+            return Result<Roster>::failure(allowed.error());
+        }
+
+        const auto student = find_active_student(session_id, srn);
+
+        if (!student) {
+            return Result<Roster>::failure(student.error());
+        }
+    } else {
+        return Result<Roster>::failure(ErrorCode::PERMISSION_DENIED);
+    }
+
+    Roster result;
+
+    for (const auto& enrollment : enrollments_) {
+        if (enrollment.srn != srn) {
+            continue;
+        }
+
+        const auto course = courses_.find(enrollment.course_code);
+
+        if (course == courses_.end()) {
+            continue;
+        }
+
+        const auto student = find_active_student(session_id, srn);
+
+        if (!student) {
+            return Result<Roster>::failure(student.error());
+        }
+
+        result.push_back({
+            srn,
+            student.value()->name,
+            enrollment.semester,
+            enrollment.course_code
+        });
+    }
+
+    std::sort(
+        result.begin(),
+        result.end(),
+        [](const RosterEntry& a, const RosterEntry& b) {
+            if (a.semester != b.semester) {
+                return a.semester < b.semester;
+            }
+            return a.course_code < b.course_code;
+        });
+
+    return Result<Roster>::success(std::move(result));
+}
+
 }  // namespace srs::course
+```

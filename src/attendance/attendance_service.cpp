@@ -1,3 +1,4 @@
+
 #include "attendance/attendance_service.h"
 
 #include <cctype>
@@ -277,7 +278,7 @@ Result<void> AttendanceService::mark_attendance(
     return Result<void>::success();
 }
 
-// F-018 and F-019: Internal attendance calculation.
+// Internal attendance calculation.
 Result<AttendanceSummary>
 AttendanceService::calculate_percentage_for(
     const std::string& srn,
@@ -457,6 +458,31 @@ Result<void> AttendanceService::set_threshold(
     threshold_ = threshold;
 
     return Result<void>::success();
+}
+
+// F-021 and F-023: Admin views a student's attendance summary.
+Result<AttendanceSummary> AttendanceService::view_student_summary(
+    const std::string& session_id,
+    const std::string& srn,
+    const std::string& course_code,
+    int semester) const {
+
+    const auto allowed =
+        accounts_.authorize(
+            session_id,
+            Permission::GenerateInstitutionReports);
+
+    if (!allowed) {
+        return Result<AttendanceSummary>::failure(allowed.error());
+    }
+
+    if (!has_non_whitespace(srn) ||
+        !has_non_whitespace(course_code)) {
+        return Result<AttendanceSummary>::failure(
+            ErrorCode::INVALID_INPUT);
+    }
+
+    return calculate_percentage_for(srn, course_code, semester);
 }
 
 }  // namespace srs::attendance

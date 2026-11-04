@@ -1,3 +1,4 @@
+```cmake
 cmake_minimum_required(VERSION 3.20)
 
 project(StudentRecordSystemCore LANGUAGES C CXX)
@@ -58,13 +59,13 @@ add_library(srs_core STATIC
     src/course/course_service.cpp
     src/grades/grade_service.cpp
     src/attendance/attendance_service.cpp
+    src/reports/report_service.cpp
     src/persistence/database.cpp
     src/persistence/repositories.cpp
 )
 
-target_include_directories(
-    srs_core
-    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
+target_include_directories(srs_core PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 target_link_libraries(
@@ -91,8 +92,8 @@ add_executable(test_validator
     tests/test_student_profiles.cpp
     tests/test_user_accounts.cpp
     tests/test_course_service.cpp
-    tests/test_course_persistence.cpp
     tests/test_grade_service.cpp
+    tests/test_course_persistence.cpp
     tests/test_grade_persistence.cpp
     tests/test_attendance_service.cpp
     tests/test_attendance_persistence.cpp
@@ -114,3 +115,4 @@ add_test(
     NAME test_validator
     COMMAND test_validator
 )
+```

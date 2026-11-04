@@ -1,3 +1,4 @@
+
 #ifndef STUDENT_RECORD_SYSTEM_ATTENDANCE_ATTENDANCE_SERVICE_H
 #define STUDENT_RECORD_SYSTEM_ATTENDANCE_ATTENDANCE_SERVICE_H
 
@@ -85,6 +86,13 @@ public:
         const std::string& session_id,
         double threshold);
 
+    // F-021 and F-023: Admin views another student's attendance summary.
+    srs::core::Result<AttendanceSummary> view_student_summary(
+        const std::string& session_id,
+        const std::string& srn,
+        const std::string& course_code,
+        int semester) const;
+
 private:
     using Key = std::tuple<
         std::string,
@@ -120,4 +128,4 @@ private:
 
 }  // namespace srs::attendance
 
-#endif
+#endif  // STUDENT_RECORD_SYSTEM_ATTENDANCE_ATTENDANCE_SERVICE_H
