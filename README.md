@@ -52,6 +52,22 @@ The schema enables foreign keys and includes migrations, repositories, unique
 keys, and transaction support for users, student profiles, courses,
 enrollments, grades, attendance, and audit records.
 
+## Using the application
+
+Start the executable and follow the menus. On the very first run the database
+has no users, so the program asks you to create the first administrator
+(username, password, confirmation). After that, log in with that account.
+
+- The menus depend on the logged-in role (Student, Faculty, Admin). Only the
+  operations that role may use are listed.
+- Admins manage users, students, courses and enrollments. Faculty enter grades
+  and attendance for their courses and view rosters. Students view their own
+  profile, grades, GPA/CGPA, attendance and academic report.
+- Enter `0` to go back or log out. Enter `q` in the main menu to log out and
+  exit. Passwords are not echoed when typed in a terminal.
+- The CLI only calls the existing services; all validation and permission
+  rules live in the service layer.
+
 ## Documentation
 
 - [Software Requirements Specification](docs/SRS-Document.pdf)

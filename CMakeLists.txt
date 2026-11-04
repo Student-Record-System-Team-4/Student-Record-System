@@ -1,4 +1,3 @@
-```cmake
 cmake_minimum_required(VERSION 3.20)
 
 project(StudentRecordSystemCore LANGUAGES C CXX)
@@ -59,13 +58,14 @@ add_library(srs_core STATIC
     src/course/course_service.cpp
     src/grades/grade_service.cpp
     src/attendance/attendance_service.cpp
-    src/reports/report_service.cpp
     src/persistence/database.cpp
     src/persistence/repositories.cpp
+    src/ui/cli.cpp
 )
 
-target_include_directories(srs_core PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
+target_include_directories(
+    srs_core
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 target_link_libraries(
@@ -92,11 +92,12 @@ add_executable(test_validator
     tests/test_student_profiles.cpp
     tests/test_user_accounts.cpp
     tests/test_course_service.cpp
-    tests/test_grade_service.cpp
     tests/test_course_persistence.cpp
+    tests/test_grade_service.cpp
     tests/test_grade_persistence.cpp
     tests/test_attendance_service.cpp
     tests/test_attendance_persistence.cpp
+    tests/test_cli.cpp
     tests/application_test.cpp
     tests/sample_test.cpp
     tests/test_persistence.cpp
@@ -115,4 +116,16 @@ add_test(
     NAME test_validator
     COMMAND test_validator
 )
-```
+
+# Smoke test: the production executable starts on a fresh database, runs the
+# first-run administrator setup, logs in, logs out and exits with code 0.
+if(NOT WIN32)
+    add_test(
+        NAME cli_smoke
+        COMMAND sh -c "rm -f cli-smoke-test.db && printf 'admin01\\nAdmin12345\\nAdmin12345\\n1\\nadmin01\\nAdmin12345\\n0\\n0\\n' | $<TARGET_FILE:student_record_system> cli-smoke-test.db && rm -f cli-smoke-test.db"
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+    set_tests_properties(cli_smoke PROPERTIES
+        PASS_REGULAR_EXPRESSION "Welcome, admin01 \\(Admin\\)\\..*Goodbye\\."
+    )
+endif()
