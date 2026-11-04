@@ -1,4 +1,3 @@
-```cpp
 #include "course/course_service.h"
 
 #include <algorithm>
@@ -521,9 +520,7 @@ Result<std::vector<RosterEntry>> CourseService::view_student_enrollments(
             return Result<Roster>::failure(allowed.error());
         }
 
-        const auto profile = students_.view_own_profile(
-            *username.value(),
-            srs::student::UserRole::Student);
+        const auto profile = students_.view_own_profile(session_id);
 
         if (!profile) {
             return Result<Roster>::failure(profile.error());
@@ -592,4 +589,3 @@ Result<std::vector<RosterEntry>> CourseService::view_student_enrollments(
 }
 
 }  // namespace srs::course
-```

@@ -1,4 +1,3 @@
-```cpp
 #ifndef STUDENT_RECORD_SYSTEM_COURSE_COURSE_SERVICE_H
 #define STUDENT_RECORD_SYSTEM_COURSE_COURSE_SERVICE_H
 
@@ -131,4 +130,3 @@ private:
 }  // namespace srs::course
 
 #endif  // STUDENT_RECORD_SYSTEM_COURSE_COURSE_SERVICE_H
-```

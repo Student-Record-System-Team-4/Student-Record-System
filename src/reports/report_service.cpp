@@ -93,9 +93,7 @@ Result<StudentAcademicReport> ReportService::build_student_report(
                 allowed.error());
         }
 
-        const auto profile = students_.view_own_profile(
-            *username.value(),
-            srs::student::UserRole::Student);
+        const auto profile = students_.view_own_profile(session_id);
 
         if (!profile) {
             return Result<StudentAcademicReport>::failure(
@@ -144,8 +142,8 @@ Result<StudentAcademicReport> ReportService::build_student_report(
         query.srn = srn;
 
         const auto matches = students_.search_students(
-            query,
-            srs::student::UserRole::Admin);
+            session_id,
+            query);
 
         if (!matches) {
             return Result<StudentAcademicReport>::failure(
@@ -238,9 +236,7 @@ Result<StudentAcademicReport> ReportService::generate_my_report(
             username.error());
     }
 
-    const auto profile = students_.view_own_profile(
-        *username.value(),
-        srs::student::UserRole::Student);
+    const auto profile = students_.view_own_profile(session_id);
 
     if (!profile) {
         return Result<StudentAcademicReport>::failure(

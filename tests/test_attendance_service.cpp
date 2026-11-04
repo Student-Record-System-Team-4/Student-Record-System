@@ -1,5 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 
+#include <cstdio>
 #include <string>
 #include <vector>
 
@@ -7,6 +8,7 @@
 #include "auth/authentication.h"
 #include "auth/user_accounts.h"
 #include "course/course_service.h"
+#include "persistence/database.h"
 #include "student/student_profiles.h"
 
 using srs::auth::AuthenticationService;
@@ -186,6 +188,17 @@ TEST_CASE("Invalid attendance input is rejected", "[attendance][F-017]") {
     ).error() == ErrorCode::INVALID_INPUT);
 }
 
+TEST_CASE("Attendance cannot be recorded for an unenrolled student", "[attendance][F-017]") {
+    AttendanceFixture f;
+
+    const auto result = f.attendance.mark_attendance(
+        f.faculty1, "SRN-999", "CS201", 3,
+        "2026-11-01", "Morning Session", AttendanceStatus::Present);
+
+    REQUIRE_FALSE(result);
+    REQUIRE(result.error() == ErrorCode::NOT_FOUND);
+}
+
 // F-018: Percentage is calculated and rounded to two decimal places.
 TEST_CASE("Attendance percentage is rounded to two decimals", "[attendance][F-018]") {
     AttendanceFixture f;
@@ -249,6 +262,19 @@ TEST_CASE("Attendance exactly at threshold is not flagged", "[attendance][F-019]
 
     REQUIRE(summary);
     REQUIRE(summary.value()->percentage == 75.0);
+    REQUIRE_FALSE(summary.value()->below_threshold);
+}
+
+TEST_CASE("Attendance percentage is zero when no sessions are recorded", "[attendance][F-018]") {
+    AttendanceFixture f;
+
+    const auto summary =
+        f.attendance.view_my_summary(f.student1, "CS201", 3);
+
+    REQUIRE(summary);
+    REQUIRE(summary.value()->total_sessions == 0);
+    REQUIRE(summary.value()->present_sessions == 0);
+    REQUIRE(summary.value()->percentage == 0.0);
     REQUIRE_FALSE(summary.value()->below_threshold);
 }
 

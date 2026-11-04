@@ -1,4 +1,3 @@
-```cmake
 cmake_minimum_required(VERSION 3.20)
 
 project(StudentRecordSystemCore LANGUAGES C CXX)
@@ -115,4 +114,3 @@ add_test(
     NAME test_validator
     COMMAND test_validator
 )
-```
