@@ -512,6 +512,8 @@ Result<std::vector<RosterEntry>> CourseService::view_student_enrollments(
         return Result<Roster>::failure(role.error());
     }
 
+    std::string student_name;
+
     if (*role.value() == Role::Student) {
         const auto allowed =
             accounts_.authorize(session_id, Permission::ViewOwnReports);
@@ -529,6 +531,7 @@ Result<std::vector<RosterEntry>> CourseService::view_student_enrollments(
         if (profile.value()->srn != srn) {
             return Result<Roster>::failure(ErrorCode::PERMISSION_DENIED);
         }
+        student_name = profile.value()->name;
     } else if (*role.value() == Role::Admin) {
         const auto allowed =
             accounts_.authorize(
@@ -544,6 +547,7 @@ Result<std::vector<RosterEntry>> CourseService::view_student_enrollments(
         if (!student) {
             return Result<Roster>::failure(student.error());
         }
+        student_name = student.value()->name;
     } else {
         return Result<Roster>::failure(ErrorCode::PERMISSION_DENIED);
     }
@@ -561,15 +565,9 @@ Result<std::vector<RosterEntry>> CourseService::view_student_enrollments(
             continue;
         }
 
-        const auto student = find_active_student(session_id, srn);
-
-        if (!student) {
-            return Result<Roster>::failure(student.error());
-        }
-
         result.push_back({
             srn,
-            student.value()->name,
+            student_name,
             enrollment.semester,
             enrollment.course_code
         });
