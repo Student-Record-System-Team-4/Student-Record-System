@@ -111,6 +111,11 @@ private:
     };
     using Key = std::tuple<std::string, std::string, int>;  // srn, course, semester
 
+    srs::core::Result<void> store_grade(
+        const std::string& srn,
+        const std::string& course_code,
+        int semester,
+        const StoredGrade& grade);
     srs::core::Result<void> check_entry(
         const std::string& session_id,
         const std::string& srn,

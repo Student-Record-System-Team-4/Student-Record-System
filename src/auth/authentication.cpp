@@ -30,7 +30,7 @@ AuthenticationService::AuthenticationService(
 AuthenticationService::AuthenticationService(
     std::vector<User> registered_users,
     srs::persistence::Database& database)
-    : AuthenticationService(std::move(registered_users)) {
+    : AuthenticationService(registered_users) {
     database_ = &database;
     srs::persistence::UserRepository repository(database);
     const auto stored = repository.all();

@@ -1,10 +1,10 @@
-#include "core/application.h"
+#include <catch2/catch_test_macros.hpp>
 
 #include <string>
 
-int main() {
-    return std::string(student_record::application_name()) ==
-                   "Student Record System"
-               ? 0
-               : 1;
+#include "core/application.h"
+
+TEST_CASE("Application reports its name", "[application]") {
+    REQUIRE(std::string(student_record::application_name()) ==
+            "Student Record System");
 }
