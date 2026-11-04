@@ -29,11 +29,12 @@ add_library(srs_core STATIC
     src/student/student_profiles.cpp
     src/course/course_service.cpp
     src/grades/grade_service.cpp
+    src/attendance/attendance_service.cpp
+    src/reports/report_service.cpp
 )
 
-target_include_directories(
-    srs_core
-    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
+target_include_directories(srs_core PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 add_executable(test_validator
@@ -44,7 +45,7 @@ add_executable(test_validator
     tests/test_student_profiles.cpp
     tests/test_user_accounts.cpp
     tests/test_course_service.cpp
-    tests/test_grade_service.cpp     
+    tests/test_grade_service.cpp
 )
 
 target_link_libraries(test_validator PRIVATE
