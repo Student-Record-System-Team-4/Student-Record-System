@@ -95,6 +95,7 @@ add_executable(test_validator
     tests/test_grade_service.cpp
     tests/test_grade_persistence.cpp
     tests/test_attendance_service.cpp
+    tests/test_attendance_persistence.cpp
     tests/application_test.cpp
     tests/sample_test.cpp
     tests/test_persistence.cpp

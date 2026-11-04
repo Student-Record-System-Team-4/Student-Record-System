@@ -335,3 +335,146 @@ TEST_CASE("Invalid attendance viewing requests are rejected", "[attendance][F-02
     REQUIRE(f.attendance.view_my_summary(
         f.student1, "CS201", 13).error() == ErrorCode::INVALID_INPUT);
 }
+// F-017: the same session typed differently is still one session.
+TEST_CASE("Session details differing only in case or spaces are one session",
+          "[attendance][F-017][duplicates]") {
+    AttendanceFixture f;
+
+    f.mark("SRN-001", "2026-11-01", "Lecture 1", AttendanceStatus::Present);
+    // A correction typed with different case and stray whitespace.
+    f.mark("SRN-001", "2026-11-01", "  lecture 1 ", AttendanceStatus::Absent);
+
+    const auto records = f.attendance.view_my_attendance(f.student1, "CS201");
+    REQUIRE(records);
+    REQUIRE(records.value()->size() == 1);
+    REQUIRE(records.value()->front().session_details == "Lecture 1");
+    REQUIRE(records.value()->front().status == AttendanceStatus::Absent);
+
+    const auto summary = f.attendance.view_my_summary(f.student1, "CS201", 3);
+    REQUIRE(summary.value()->total_sessions == 1);
+    REQUIRE(summary.value()->present_sessions == 0);
+
+    // A different date or a different session on the same date is separate.
+    f.mark("SRN-001", "2026-11-02", "Lecture 1", AttendanceStatus::Present);
+    f.mark("SRN-001", "2026-11-01", "Lecture 2", AttendanceStatus::Present);
+    REQUIRE(f.attendance.view_my_summary(f.student1, "CS201", 3)
+                .value()->total_sessions == 3);
+
+    // Another student's entry for the same session is independent.
+    f.mark("SRN-002", "2026-11-01", "Lecture 1", AttendanceStatus::Present);
+    REQUIRE(f.attendance.view_my_summary(f.student2, "CS201", 3)
+                .value()->total_sessions == 1);
+}
+
+TEST_CASE("Malformed session details are rejected", "[attendance][F-017]") {
+    AttendanceFixture f;
+
+    const std::vector<std::string> bad = {
+        "", "   ", "\t", "Line1\nLine2", std::string("Bell\x07", 5),
+        std::string(101, 'x')};
+
+    for (const auto& details : bad) {
+        const auto result = f.attendance.mark_attendance(
+            f.faculty1, "SRN-001", "CS201", 3, "2026-11-01", details,
+            AttendanceStatus::Present);
+        REQUIRE_FALSE(result);
+        REQUIRE(result.error() == ErrorCode::INVALID_INPUT);
+    }
+
+    REQUIRE(f.attendance.view_my_attendance(f.student1, "CS201")
+                .value()->empty());
+
+    // The length limit itself is accepted.
+    f.mark("SRN-001", "2026-11-01", std::string(100, 'x'),
+           AttendanceStatus::Present);
+    REQUIRE(f.attendance.view_my_attendance(f.student1, "CS201")
+                .value()->size() == 1);
+}
+
+// F-018: exact integer rounding.
+TEST_CASE("Attendance percentage rounds exact halves up",
+          "[attendance][F-018]") {
+    AttendanceFixture f;
+
+    // 23 of 160 sessions = 14.375% exactly. Floating-point rounding gives
+    // 14.37; the correct result is 14.38.
+    for (int i = 1; i <= 160; ++i) {
+        f.mark("SRN-001", "2026-11-01", "Session " + std::to_string(i),
+               i <= 23 ? AttendanceStatus::Present : AttendanceStatus::Absent);
+    }
+
+    const auto summary = f.attendance.view_my_summary(f.student1, "CS201", 3);
+    REQUIRE(summary);
+    REQUIRE(summary.value()->total_sessions == 160);
+    REQUIRE(summary.value()->present_sessions == 23);
+    REQUIRE(summary.value()->percentage == 14.38);
+}
+
+TEST_CASE("Perfect and zero attendance are exact", "[attendance][F-018]") {
+    AttendanceFixture f;
+
+    f.mark("SRN-001", "2026-11-01", "Session 1", AttendanceStatus::Present);
+    f.mark("SRN-001", "2026-11-02", "Session 2", AttendanceStatus::Present);
+    f.mark("SRN-002", "2026-11-01", "Session 1", AttendanceStatus::Absent);
+    f.mark("SRN-002", "2026-11-02", "Session 2", AttendanceStatus::Late);
+
+    const auto alice = f.attendance.view_my_summary(f.student1, "CS201", 3);
+    REQUIRE(alice.value()->percentage == 100.0);
+    REQUIRE_FALSE(alice.value()->below_threshold);
+
+    const auto bob = f.attendance.view_my_summary(f.student2, "CS201", 3);
+    REQUIRE(bob.value()->percentage == 0.0);
+    REQUIRE(bob.value()->below_threshold);
+}
+
+// F-019: threshold comparison uses the exact ratio and ignores empty history.
+TEST_CASE("Students with no recorded sessions are not flagged",
+          "[attendance][F-019]") {
+    AttendanceFixture f;
+
+    const auto summary = f.attendance.view_my_summary(f.student1, "CS201", 3);
+    REQUIRE(summary);
+    REQUIRE(summary.value()->total_sessions == 0);
+    REQUIRE(summary.value()->percentage == 0.0);
+    REQUIRE_FALSE(summary.value()->below_threshold);
+}
+
+TEST_CASE("Threshold is compared against the exact percentage",
+          "[attendance][F-019]") {
+    AttendanceFixture f;
+    REQUIRE(f.attendance.set_threshold(f.admin, 66.67));
+
+    // 2 of 3 = 66.666...% is below 66.67 even though it displays as 66.67.
+    f.mark("SRN-001", "2026-11-01", "Session 1", AttendanceStatus::Present);
+    f.mark("SRN-001", "2026-11-02", "Session 2", AttendanceStatus::Present);
+    f.mark("SRN-001", "2026-11-03", "Session 3", AttendanceStatus::Absent);
+
+    const auto summary = f.attendance.view_my_summary(f.student1, "CS201", 3);
+    REQUIRE(summary.value()->percentage == 66.67);
+    REQUIRE(summary.value()->below_threshold);
+}
+
+// F-020: records only count while the enrollment exists.
+TEST_CASE("Attendance of a removed enrollment is hidden and cannot be edited",
+          "[attendance][F-020]") {
+    AttendanceFixture f;
+    REQUIRE(f.courses.enroll_student(f.admin, "SRN-001", "CS201", 4));
+
+    f.mark("SRN-001", "2026-11-01", "Session 1", AttendanceStatus::Present);
+    REQUIRE(f.attendance.mark_attendance(
+        f.faculty1, "SRN-001", "CS201", 4, "2026-11-02", "Session 1",
+        AttendanceStatus::Absent));
+
+    REQUIRE(f.courses.remove_student(f.admin, "SRN-001", "CS201", 3));
+
+    const auto records = f.attendance.view_my_attendance(f.student1, "CS201");
+    REQUIRE(records);
+    REQUIRE(records.value()->size() == 1);
+    REQUIRE(records.value()->front().semester == 4);
+
+    REQUIRE(f.attendance.view_my_summary(f.student1, "CS201", 3).error() ==
+            ErrorCode::NOT_FOUND);
+    REQUIRE(f.attendance.mark_attendance(
+                f.faculty1, "SRN-001", "CS201", 3, "2026-11-03", "Session 2",
+                AttendanceStatus::Present).error() == ErrorCode::NOT_FOUND);
+}
