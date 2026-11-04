@@ -1,5 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 
+#include <cstdio>
 #include <string>
 #include <vector>
 
@@ -7,6 +8,7 @@
 #include "auth/authentication.h"
 #include "auth/user_accounts.h"
 #include "course/course_service.h"
+#include "persistence/database.h"
 #include "student/student_profiles.h"
 
 using srs::auth::AuthenticationService;
@@ -186,6 +188,17 @@ TEST_CASE("Invalid attendance input is rejected", "[attendance][F-017]") {
     ).error() == ErrorCode::INVALID_INPUT);
 }
 
+TEST_CASE("Attendance cannot be recorded for an unenrolled student", "[attendance][F-017]") {
+    AttendanceFixture f;
+
+    const auto result = f.attendance.mark_attendance(
+        f.faculty1, "SRN-999", "CS201", 3,
+        "2026-11-01", "Morning Session", AttendanceStatus::Present);
+
+    REQUIRE_FALSE(result);
+    REQUIRE(result.error() == ErrorCode::NOT_FOUND);
+}
+
 // F-018: Percentage is calculated and rounded to two decimal places.
 TEST_CASE("Attendance percentage is rounded to two decimals", "[attendance][F-018]") {
     AttendanceFixture f;
@@ -250,6 +263,19 @@ TEST_CASE("Attendance exactly at threshold is not flagged", "[attendance][F-019]
     REQUIRE(summary);
     REQUIRE(summary.value()->percentage == 75.0);
     REQUIRE_FALSE(summary.value()->below_threshold);
+}
+
+TEST_CASE("Attendance percentage is zero when no sessions are recorded", "[attendance][F-018]") {
+    AttendanceFixture f;
+
+    const auto summary =
+        f.attendance.view_my_summary(f.student1, "CS201", 3);
+
+    REQUIRE(summary);
+    REQUIRE(summary.value()->total_sessions == 0);
+    REQUIRE(summary.value()->present_sessions == 0);
+    REQUIRE(summary.value()->percentage == 0.0);
+    REQUIRE(summary.value()->below_threshold);
 }
 
 // F-019: Admin can configure the threshold.
@@ -334,4 +360,81 @@ TEST_CASE("Invalid attendance viewing requests are rejected", "[attendance][F-02
 
     REQUIRE(f.attendance.view_my_summary(
         f.student1, "CS201", 13).error() == ErrorCode::INVALID_INPUT);
+}
+
+TEST_CASE("Attendance records persist and reload across service restarts", "[attendance][persistence]") {
+    const char* database_path = "srs-attendance-test.db";
+    std::remove(database_path);
+
+    {
+        srs::persistence::Database database(database_path);
+        REQUIRE(database.is_open());
+
+        AuthenticationService auth(std::vector<User>{
+            {"admin01", "Admin1234", Role::Admin},
+            {"faculty01", "Teach1234", Role::Faculty},
+            {"student01", "Pass1234", Role::Student}}, database);
+        UserAccountService accounts(auth);
+        StudentProfileService students(auth, database);
+        CourseService courses(accounts, auth, students, database);
+
+        const auto admin = auth.login("admin01", "Admin1234");
+        REQUIRE(admin != nullptr);
+        REQUIRE(students.register_student(
+            admin->id,
+            StudentProfile{
+                "student01", "Alice Smith", "SRN-001",
+                "2005-01-01", "555-0100",
+                "Computer Science", 3, true
+            }));
+        REQUIRE(courses.create_course(
+            admin->id, Course{"CS201", "Data Structures", 4, "faculty01"}));
+        REQUIRE(courses.enroll_student(
+            admin->id, "SRN-001", "CS201", 3));
+
+        AttendanceService attendance(
+            accounts, auth, students, courses, database);
+        const auto faculty = auth.login("faculty01", "Teach1234");
+        REQUIRE(faculty != nullptr);
+
+        REQUIRE(attendance.mark_attendance(
+            faculty->id, "SRN-001", "CS201", 3,
+            "2026-11-01", "Morning Session", AttendanceStatus::Absent));
+        REQUIRE(attendance.mark_attendance(
+            faculty->id, "SRN-001", "CS201", 3,
+            "2026-11-01", "Morning Session", AttendanceStatus::Present));
+    }
+
+    {
+        srs::persistence::Database database(database_path);
+        REQUIRE(database.is_open());
+
+        AuthenticationService auth(std::vector<User>{
+            {"admin01", "Admin1234", Role::Admin},
+            {"faculty01", "Teach1234", Role::Faculty},
+            {"student01", "Pass1234", Role::Student}}, database);
+        UserAccountService accounts(auth);
+        StudentProfileService students(auth, database);
+        CourseService courses(accounts, auth, students, database);
+        AttendanceService attendance(
+            accounts, auth, students, courses, database);
+
+        const auto student = auth.login("student01", "Pass1234");
+        REQUIRE(student != nullptr);
+
+        const auto records =
+            attendance.view_my_attendance(student->id, "CS201");
+        REQUIRE(records);
+        REQUIRE(records.value()->size() == 1);
+        REQUIRE(records.value()->front().status == AttendanceStatus::Present);
+
+        const auto summary =
+            attendance.view_my_summary(student->id, "CS201", 3);
+        REQUIRE(summary);
+        REQUIRE(summary.value()->total_sessions == 1);
+        REQUIRE(summary.value()->present_sessions == 1);
+        REQUIRE(summary.value()->percentage == 100.0);
+    }
+
+    std::remove(database_path);
 }
