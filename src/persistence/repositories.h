@@ -4,8 +4,8 @@
 #include <string>
 #include <vector>
 
-#include "core/result.h"
-#include "persistence/database.h"
+#include "database.h"
+#include "result.h"
 
 namespace srs::persistence {
 
@@ -43,10 +43,6 @@ struct GradeRow {
     std::string grade;
 };
 
-/*
- * Keep this order aligned with attendance_service.cpp:
- * {srn, course_code, date, session_details, status, semester}
- */
 struct AttendanceRow {
     std::string srn;
     std::string course_code;
@@ -56,15 +52,21 @@ struct AttendanceRow {
     int semester = 0;
 };
 
+struct AuditRow {
+    std::string username;
+    std::string action;
+    std::string details;
+    std::string timestamp;
+};
+
 class UserRepository {
 public:
-    explicit UserRepository(Database& database)
-        : database_(database) {}
+    explicit UserRepository(Database& database) : database_(database) {}
 
     srs::core::Result<void> save(const UserRow& row);
     srs::core::Result<void> remove(const std::string& username);
-    srs::core::Result<UserRow> find(const std::string& username) const;
-    srs::core::Result<std::vector<UserRow>> all() const;
+    srs::core::Result<UserRow> find(const std::string& username);
+    srs::core::Result<std::vector<UserRow>> all();
 
 private:
     Database& database_;
@@ -72,11 +74,11 @@ private:
 
 class StudentRepository {
 public:
-    explicit StudentRepository(Database& database)
-        : database_(database) {}
+    explicit StudentRepository(Database& database) : database_(database) {}
 
     srs::core::Result<void> save(const StudentRow& row);
-    srs::core::Result<std::vector<StudentRow>> all() const;
+    srs::core::Result<std::vector<StudentRow>> all();
+    srs::core::Result<StudentRow> find(const std::string& srn);
 
 private:
     Database& database_;
@@ -84,11 +86,12 @@ private:
 
 class CourseRepository {
 public:
-    explicit CourseRepository(Database& database)
-        : database_(database) {}
+    explicit CourseRepository(Database& database) : database_(database) {}
 
     srs::core::Result<void> save(const CourseRow& row);
-    srs::core::Result<std::vector<CourseRow>> all() const;
+    srs::core::Result<std::vector<CourseRow>> all();
+    srs::core::Result<CourseRow> find(const std::string& course_code);
+    srs::core::Result<void> deactivate(const std::string& course_code);
 
 private:
     Database& database_;
@@ -96,11 +99,15 @@ private:
 
 class EnrollmentRepository {
 public:
-    explicit EnrollmentRepository(Database& database)
-        : database_(database) {}
+    explicit EnrollmentRepository(Database& database) : database_(database) {}
 
     srs::core::Result<void> save(const EnrollmentRow& row);
-    srs::core::Result<std::vector<EnrollmentRow>> all() const;
+    srs::core::Result<std::vector<EnrollmentRow>> all();
+    srs::core::Result<void> remove(
+        const std::string& srn,
+        const std::string& course_code,
+        int semester
+    );
 
 private:
     Database& database_;
@@ -108,11 +115,10 @@ private:
 
 class GradeRepository {
 public:
-    explicit GradeRepository(Database& database)
-        : database_(database) {}
+    explicit GradeRepository(Database& database) : database_(database) {}
 
     srs::core::Result<void> save(const GradeRow& row);
-    srs::core::Result<std::vector<GradeRow>> all() const;
+    srs::core::Result<std::vector<GradeRow>> all();
 
 private:
     Database& database_;
@@ -120,11 +126,20 @@ private:
 
 class AttendanceRepository {
 public:
-    explicit AttendanceRepository(Database& database)
-        : database_(database) {}
+    explicit AttendanceRepository(Database& database) : database_(database) {}
 
     srs::core::Result<void> save(const AttendanceRow& row);
-    srs::core::Result<std::vector<AttendanceRow>> all() const;
+    srs::core::Result<std::vector<AttendanceRow>> all();
+
+private:
+    Database& database_;
+};
+
+class AuditRepository {
+public:
+    explicit AuditRepository(Database& database) : database_(database) {}
+
+    srs::core::Result<void> append(const AuditRow& row);
 
 private:
     Database& database_;
