@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "database.h"
-#include "result.h"
+#include "../core/result.h"
 
 namespace srs::persistence {
 
