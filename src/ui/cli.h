@@ -1,0 +1,139 @@
+#ifndef STUDENT_RECORD_SYSTEM_UI_CLI_H
+#define STUDENT_RECORD_SYSTEM_UI_CLI_H
+
+#include <iosfwd>
+#include <optional>
+#include <string>
+#include <vector>
+
+#include "attendance/attendance_service.h"
+#include "auth/access_control.h"
+#include "auth/authentication.h"
+#include "auth/user_accounts.h"
+#include "core/error_codes.h"
+#include "course/course_service.h"
+#include "grades/grade_service.h"
+#include "student/student_profiles.h"
+
+namespace srs::ui {
+
+// Everything the CLI talks to. The CLI holds no business rules of its own: it
+// prompts, calls these services and prints what they return. Which menu
+// entries are shown is decided by asking UserAccountService::authorize() for
+// each entry's permission, so the role -> permission matrix lives in one place.
+struct Services {
+    srs::auth::UserAccountService& accounts;
+    srs::auth::AuthenticationService& authentication;
+    srs::student::StudentProfileService& students;
+    srs::course::CourseService& courses;
+    srs::grades::GradeService& grades;
+    srs::attendance::AttendanceService& attendance;
+};
+
+// First-run setup: asks for the initial administrator's credentials. Returns
+// nullopt if input ends or the user gives up.
+std::optional<srs::auth::User> prompt_first_admin(
+    std::istream& in, std::ostream& out);
+
+class Cli {
+public:
+    Cli(Services services, std::istream& in, std::ostream& out);
+
+    // Runs until the user exits or input ends. Returns 0 on a normal exit.
+    int run();
+
+private:
+    using Action = void (Cli::*)();
+
+    struct Item {
+        const char* label;
+        std::optional<srs::auth::Permission> required;  // none = any user
+        Action action;
+    };
+
+    struct Module {
+        const char* name;
+        std::vector<Item> items;
+    };
+
+    // --- screens ---------------------------------------------------------
+    bool login_screen();
+    void main_menu();
+    void module_menu(const Module& module);
+    void log_out();
+
+    // --- prompts ---------------------------------------------------------
+    std::optional<std::string> text(const std::string& label);
+    std::optional<std::string> secret(const std::string& label);
+    std::optional<int> integer(const std::string& label, bool blank_is_zero = false);
+    std::optional<double> number(const std::string& label);
+    std::optional<std::string> text_or(const std::string& label, const std::string& current);
+    std::optional<int> integer_or(const std::string& label, int current);
+    std::optional<srs::auth::Role> role_choice(const std::string& label);
+    bool confirm(const std::string& what);
+    std::optional<int> menu_choice(const std::string& prompt);
+
+    // --- output ----------------------------------------------------------
+    void fail(srs::core::ErrorCode error);
+    void report(const srs::core::Result<void>& result, const std::string& success);
+    bool allowed(srs::auth::Permission permission) const;
+    std::string role_name() const;
+    void print_profile(const srs::student::StudentProfile& profile);
+    void print_grades(const std::vector<srs::grades::GradeRecord>& grades);
+    void print_summary(const srs::grades::AcademicSummary& summary);
+    void print_attendance_summary(const srs::attendance::AttendanceSummary& summary);
+    std::optional<srs::student::StudentProfile> find_student(const std::string& srn);
+
+    // --- students --------------------------------------------------------
+    void view_my_profile();
+    void search_students();
+    void register_student();
+    void update_student();
+    void deactivate_student();
+
+    // --- courses and enrollment -------------------------------------------
+    void list_courses();
+    void create_course();
+    void update_course();
+    void deactivate_course();
+    void enroll_student();
+    void remove_student();
+    void view_roster();
+
+    // --- grades ----------------------------------------------------------
+    void enter_marks();
+    void enter_letter_grade();
+    void view_my_grades();
+    void view_my_summary();
+    void view_student_grades();
+    void view_student_summary();
+
+    // --- attendance ------------------------------------------------------
+    void mark_attendance();
+    void view_my_attendance();
+    void set_attendance_threshold();
+
+    // --- reports ---------------------------------------------------------
+    void my_report();
+    void student_report();
+
+    // --- users and account -----------------------------------------------
+    void create_user();
+    void change_user_role();
+    void set_user_active();
+    void reset_user_password();
+    void change_my_password();
+
+    Services services_;
+    std::istream& in_;
+    std::ostream& out_;
+    std::vector<Module> modules_;
+    std::string session_;   // empty = not logged in
+    std::string username_;
+    bool eof_ = false;
+    bool quit_ = false;
+};
+
+}  // namespace srs::ui
+
+#endif  // STUDENT_RECORD_SYSTEM_UI_CLI_H
