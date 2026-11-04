@@ -1,7 +1,11 @@
+
 #include "attendance/attendance_service.h"
 
 #include <cctype>
 #include <cmath>
+#include <fstream>
+#include <iomanip>
+#include <sstream>
 #include <utility>
 
 namespace srs::attendance {
@@ -95,6 +99,155 @@ AttendanceService::AttendanceService(
               ? threshold
               : DEFAULT_THRESHOLD) {}
 
+// Configure persistent storage and load previously saved records.
+Result<void> AttendanceService::set_storage_file(
+    const std::string& file_path) {
+
+    if (!has_non_whitespace(file_path)) {
+        return Result<void>::failure(ErrorCode::INVALID_INPUT);
+    }
+
+    const std::string previous_file = storage_file_;
+    const auto previous_records = records_;
+
+    storage_file_ = file_path;
+
+    const auto loaded = load_records();
+
+    if (!loaded) {
+        storage_file_ = previous_file;
+        records_ = previous_records;
+        return Result<void>::failure(loaded.error());
+    }
+
+    return Result<void>::success();
+}
+
+// Load attendance records from the CSV storage file.
+Result<void> AttendanceService::load_records() {
+    std::ifstream input(storage_file_);
+
+    if (!input.is_open()) {
+        // If the file does not exist, create an empty storage file.
+        std::ofstream create_file(storage_file_);
+
+        if (!create_file.is_open()) {
+            return Result<void>::failure(ErrorCode::INTERNAL_ERROR);
+        }
+
+        return Result<void>::success();
+    }
+
+    std::map<Key, AttendanceRecord> loaded_records;
+    std::string line;
+
+    while (std::getline(input, line)) {
+        if (line.empty()) {
+            continue;
+        }
+
+        std::istringstream row(line);
+
+        std::string srn;
+        std::string course_code;
+        std::string date;
+        std::string session_details;
+
+        int semester = 0;
+        int status_value = -1;
+        char comma1, comma2, comma3, comma4, comma5;
+
+        if (!(row >> std::quoted(srn) >> comma1
+                  >> std::quoted(course_code) >> comma2
+                  >> semester >> comma3
+                  >> std::quoted(date) >> comma4
+                  >> std::quoted(session_details) >> comma5
+                  >> status_value)) {
+            return Result<void>::failure(ErrorCode::INTERNAL_ERROR);
+        }
+
+        row >> std::ws;
+
+        if (!row.eof() ||
+            comma1 != ',' || comma2 != ',' ||
+            comma3 != ',' || comma4 != ',' ||
+            comma5 != ',' ||
+            !has_non_whitespace(srn) ||
+            !has_non_whitespace(course_code) ||
+            !has_non_whitespace(session_details) ||
+            !is_valid_date(date) ||
+            semester < srs::course::CourseService::MIN_SEMESTER ||
+            semester > srs::course::CourseService::MAX_SEMESTER ||
+            status_value < 0 || status_value > 2) {
+
+            return Result<void>::failure(ErrorCode::INTERNAL_ERROR);
+        }
+
+        const AttendanceStatus status =
+            static_cast<AttendanceStatus>(status_value);
+
+        AttendanceRecord record{
+            srn,
+            course_code,
+            semester,
+            date,
+            session_details,
+            status
+        };
+
+        const Key key(
+            srn, course_code, semester, date, session_details);
+
+        loaded_records[key] = std::move(record);
+    }
+
+    if (input.bad()) {
+        return Result<void>::failure(ErrorCode::INTERNAL_ERROR);
+    }
+
+    records_ = std::move(loaded_records);
+
+    return Result<void>::success();
+}
+
+// Save all attendance records to the CSV storage file.
+Result<void> AttendanceService::save_records() const {
+    if (storage_file_.empty()) {
+        return Result<void>::success();
+    }
+
+    std::ofstream output(storage_file_, std::ios::trunc);
+
+    if (!output.is_open()) {
+        return Result<void>::failure(ErrorCode::INTERNAL_ERROR);
+    }
+
+    for (const auto& entry : records_) {
+        const AttendanceRecord& record = entry.second;
+
+        output
+            << std::quoted(record.srn) << ','
+            << std::quoted(record.course_code) << ','
+            << record.semester << ','
+            << std::quoted(record.date) << ','
+            << std::quoted(record.session_details) << ','
+            << static_cast<int>(record.status)
+            << '\n';
+
+        if (!output) {
+            return Result<void>::failure(ErrorCode::INTERNAL_ERROR);
+        }
+    }
+
+    output.close();
+
+    if (!output) {
+        return Result<void>::failure(ErrorCode::INTERNAL_ERROR);
+    }
+
+    return Result<void>::success();
+}
+
 // Check faculty permission, course assignment and student enrolment.
 Result<void> AttendanceService::check_faculty_access(
     const std::string& session_id,
@@ -181,8 +334,30 @@ Result<void> AttendanceService::mark_attendance(
         status
     };
 
-    // If the same session is entered again, update the existing record.
+    // Preserve the previous record in case saving fails.
+    const auto existing = records_.find(key);
+    const bool existed = existing != records_.end();
+
+    AttendanceRecord previous_record{};
+
+    if (existed) {
+        previous_record = existing->second;
+    }
+
+    // Update the existing session or insert a new session.
     records_[key] = std::move(record);
+
+    const auto saved = save_records();
+
+    if (!saved) {
+        if (existed) {
+            records_[key] = std::move(previous_record);
+        } else {
+            records_.erase(key);
+        }
+
+        return Result<void>::failure(saved.error());
+    }
 
     return Result<void>::success();
 }
@@ -221,8 +396,6 @@ AttendanceService::calculate_percentage_for(
 
             summary.total_sessions++;
 
-            // Only Present counts in the numerator.
-            // Absent and Late both count in total sessions.
             if (record.status == AttendanceStatus::Present) {
                 summary.present_sessions++;
             }

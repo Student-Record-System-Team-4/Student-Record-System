@@ -1,5 +1,7 @@
+
 #include <catch2/catch_test_macros.hpp>
 
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -335,4 +337,51 @@ TEST_CASE("Invalid attendance viewing requests are rejected", "[attendance][F-02
 
     REQUIRE(f.attendance.view_my_summary(
         f.student1, "CS201", 13).error() == ErrorCode::INVALID_INPUT);
+}
+
+// Persistence: Attendance records survive service restart.
+TEST_CASE("Attendance records persist after service restart",
+          "[attendance][persistence]") {
+
+    AttendanceFixture f;
+
+    const std::string path =
+        "build/attendance_persistence_test.csv";
+
+    std::error_code error;
+    std::filesystem::remove(path, error);
+
+    // Configure storage for the first service.
+    REQUIRE(f.attendance.set_storage_file(path));
+
+    // Record attendance.
+    f.mark(
+        "SRN-001",
+        "2026-11-01",
+        "Morning Session",
+        AttendanceStatus::Present
+    );
+
+    // Create a new service using the same application services.
+    AttendanceService restarted(
+        f.accounts,
+        f.auth,
+        f.students,
+        f.courses
+    );
+
+    // Load saved attendance.
+    REQUIRE(restarted.set_storage_file(path));
+
+    // Verify the record survived.
+    const auto records =
+        restarted.view_my_attendance(f.student1, "CS201");
+
+    REQUIRE(records);
+    REQUIRE(records.value()->size() == 1);
+    REQUIRE(records.value()->front().srn == "SRN-001");
+    REQUIRE(records.value()->front().status ==
+            AttendanceStatus::Present);
+
+    std::filesystem::remove(path, error);
 }

@@ -1,3 +1,4 @@
+
 #ifndef STUDENT_RECORD_SYSTEM_ATTENDANCE_ATTENDANCE_SERVICE_H
 #define STUDENT_RECORD_SYSTEM_ATTENDANCE_ATTENDANCE_SERVICE_H
 
@@ -50,6 +51,10 @@ public:
         srs::course::CourseService& courses,
         double threshold = DEFAULT_THRESHOLD);
 
+    // Configure persistent attendance storage.
+    srs::core::Result<void> set_storage_file(
+        const std::string& file_path);
+
     // F-017: Faculty records attendance.
     srs::core::Result<void> mark_attendance(
         const std::string& session_id,
@@ -85,6 +90,10 @@ private:
         std::string,
         std::string>;
 
+    // Persistent storage operations.
+    srs::core::Result<void> load_records();
+    srs::core::Result<void> save_records() const;
+
     srs::core::Result<void> check_faculty_access(
         const std::string& session_id,
         const std::string& srn,
@@ -94,7 +103,6 @@ private:
     srs::core::Result<std::string> own_srn(
         const std::string& session_id) const;
 
-    // Internal calculation: not directly exposed to callers by arbitrary SRN.
     srs::core::Result<AttendanceSummary> calculate_percentage_for(
         const std::string& srn,
         const std::string& course_code,
@@ -107,6 +115,9 @@ private:
 
     double threshold_;
     std::map<Key, AttendanceRecord> records_;
+
+    // Empty until persistent storage is configured.
+    std::string storage_file_;
 };
 
 }  // namespace srs::attendance

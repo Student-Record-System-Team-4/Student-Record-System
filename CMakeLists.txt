@@ -29,6 +29,7 @@ add_library(srs_core STATIC
     src/student/student_profiles.cpp
     src/course/course_service.cpp
     src/grades/grade_service.cpp
+    src/attendance/attendance_service.cpp
 )
 
 target_include_directories(
@@ -44,7 +45,8 @@ add_executable(test_validator
     tests/test_student_profiles.cpp
     tests/test_user_accounts.cpp
     tests/test_course_service.cpp
-    tests/test_grade_service.cpp     
+    tests/test_grade_service.cpp
+    tests/test_attendance_service.cpp
 )
 
 target_link_libraries(test_validator PRIVATE
