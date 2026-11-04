@@ -1,3 +1,4 @@
+
 cmake_minimum_required(VERSION 3.20)
 
 project(StudentRecordSystemCore LANGUAGES C CXX)
@@ -12,7 +13,7 @@ include(FetchContent)
 # SQLite
 find_package(SQLite3 QUIET)
 
-if (SQLite3_FOUND)
+if(SQLite3_FOUND)
     set(SRS_SQLITE_TARGET SQLite::SQLite3)
 else()
     FetchContent_Declare(
@@ -98,6 +99,7 @@ add_executable(test_validator
     tests/test_grade_persistence.cpp
     tests/test_attendance_service.cpp
     tests/test_attendance_persistence.cpp
+    tests/test_report_service.cpp
     tests/test_cli.cpp
     tests/application_test.cpp
     tests/sample_test.cpp
@@ -118,14 +120,14 @@ add_test(
     COMMAND test_validator
 )
 
-# Smoke test: the production executable starts on a fresh database, runs the
-# first-run administrator setup, logs in, logs out and exits with code 0.
+# Smoke test
 if(NOT WIN32)
     add_test(
         NAME cli_smoke
-        COMMAND sh -c "rm -f cli-smoke-test.db && printf 'admin01\\nAdmin12345\\nAdmin12345\\n1\\nadmin01\\nAdmin12345\\n0\\n0\\n' | $<TARGET_FILE:student_record_system> cli-smoke-test.db && rm -f cli-smoke-test.db"
+        COMMAND sh -c "rm -f cli-smoke-test.db && printf 'admin01\nAdmin12345\nAdmin12345\n1\nadmin01\nAdmin12345\n0\n0\n' | $<TARGET_FILE:student_record_system> cli-smoke-test.db && rm -f cli-smoke-test.db"
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
+
     set_tests_properties(cli_smoke PROPERTIES
         PASS_REGULAR_EXPRESSION "Welcome, admin01 \\(Admin\\)\\..*Goodbye\\."
     )
