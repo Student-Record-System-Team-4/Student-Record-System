@@ -103,6 +103,7 @@ add_executable(test_validator
     tests/sample_test.cpp
     tests/test_persistence.cpp
     tests/course_management_test.cpp
+    tests/test_database_backup_audit.cpp
 )
 
 target_link_libraries(
