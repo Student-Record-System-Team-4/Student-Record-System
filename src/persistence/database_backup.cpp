@@ -1,4 +1,3 @@
-
 #include "persistence/database_backup.h"
 
 #include <sqlite3.h>
@@ -31,16 +30,26 @@ srs::core::Result<void> copy_database(
     }
 
     int result = SQLITE_OK;
+    int retries = 0;
+
+    constexpr int MAX_RETRIES = 50;
+    constexpr int RETRY_DELAY_MS = 100;
 
     do {
         result = sqlite3_backup_step(backup, 128);
 
         if (result == SQLITE_BUSY || result == SQLITE_LOCKED) {
-            continue;
+            ++retries;
+            sqlite3_sleep(RETRY_DELAY_MS);
+        } else {
+            retries = 0;
         }
-    } while (result == SQLITE_OK ||
-             result == SQLITE_BUSY ||
-             result == SQLITE_LOCKED);
+
+    } while (
+        result == SQLITE_OK ||
+        ((result == SQLITE_BUSY || result == SQLITE_LOCKED) &&
+         retries < MAX_RETRIES)
+    );
 
     const int finish_result = sqlite3_backup_finish(backup);
 
