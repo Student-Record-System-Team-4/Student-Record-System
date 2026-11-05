@@ -60,6 +60,7 @@ add_library(srs_core STATIC
     src/attendance/attendance_service.cpp
     src/reports/report_service.cpp
     src/persistence/database.cpp
+    src/persistence/database_backup.cpp
     src/persistence/repositories.cpp
 )
 
