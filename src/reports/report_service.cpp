@@ -23,9 +23,12 @@ bool has_non_whitespace(const std::string& value) {
             return true;
         }
     }
+
     return false;
 }
 
+// Escapes CSV values by surrounding them with quotes
+// and doubling any quotes inside the value.
 std::string csv_escape(const std::string& value) {
     std::string result = "\"";
 
@@ -57,7 +60,8 @@ ReportService::ReportService(
       grades_(grades),
       attendance_(attendance) {}
 
-// Builds a student's report after checking the user's role.
+// Builds a student's academic report after checking
+// the logged-in user's role and permissions.
 Result<StudentAcademicReport> ReportService::build_student_report(
     const std::string& session_id,
     const std::string& srn) const {
@@ -79,27 +83,34 @@ Result<StudentAcademicReport> ReportService::build_student_report(
         authentication_.role_of(*username.value());
 
     if (!role) {
-        return Result<StudentAcademicReport>::failure(role.error());
+        return Result<StudentAcademicReport>::failure(
+            role.error());
     }
 
     StudentAcademicReport report;
 
+    // STUDENT: Can view only their own academic report.
     if (*role.value() == Role::Student) {
+
         const auto allowed =
-            accounts_.authorize(session_id, Permission::ViewOwnReports);
+            accounts_.authorize(
+                session_id,
+                Permission::ViewOwnReports);
 
         if (!allowed) {
             return Result<StudentAcademicReport>::failure(
                 allowed.error());
         }
 
-        const auto profile = students_.view_own_profile(session_id);
+        const auto profile =
+            students_.view_own_profile(session_id);
 
         if (!profile) {
             return Result<StudentAcademicReport>::failure(
                 profile.error());
         }
 
+        // Prevent a student from accessing another student's report.
         if (profile.value()->srn != srn) {
             return Result<StudentAcademicReport>::failure(
                 ErrorCode::PERMISSION_DENIED);
@@ -125,9 +136,13 @@ Result<StudentAcademicReport> ReportService::build_student_report(
                 academic_summary.error());
         }
 
-        report.academic_summary = *academic_summary.value();
+        report.academic_summary =
+            *academic_summary.value();
     }
+
+    // ADMIN: Can generate reports for other active students.
     else if (*role.value() == Role::Admin) {
+
         const auto allowed =
             accounts_.authorize(
                 session_id,
@@ -141,9 +156,10 @@ Result<StudentAcademicReport> ReportService::build_student_report(
         srs::student::StudentSearchQuery query;
         query.srn = srn;
 
-        const auto matches = students_.search_students(
-            session_id,
-            query);
+        const auto matches =
+            students_.search_students(
+                session_id,
+                query);
 
         if (!matches) {
             return Result<StudentAcademicReport>::failure(
@@ -166,7 +182,9 @@ Result<StudentAcademicReport> ReportService::build_student_report(
         }
 
         const auto student_grades =
-            grades_.view_student_grades(session_id, srn);
+            grades_.view_student_grades(
+                session_id,
+                srn);
 
         if (!student_grades) {
             return Result<StudentAcademicReport>::failure(
@@ -176,15 +194,20 @@ Result<StudentAcademicReport> ReportService::build_student_report(
         report.grades = *student_grades.value();
 
         const auto academic_summary =
-            grades_.view_student_summary(session_id, srn);
+            grades_.view_student_summary(
+                session_id,
+                srn);
 
         if (!academic_summary) {
             return Result<StudentAcademicReport>::failure(
                 academic_summary.error());
         }
 
-        report.academic_summary = *academic_summary.value();
+        report.academic_summary =
+            *academic_summary.value();
     }
+
+    // Faculty and other roles cannot generate student reports.
     else {
         return Result<StudentAcademicReport>::failure(
             ErrorCode::PERMISSION_DENIED);
@@ -192,58 +215,60 @@ Result<StudentAcademicReport> ReportService::build_student_report(
 
     // Retrieve the student's enrolled courses.
     const auto enrollments =
-        courses_.view_student_enrollments(session_id, srn);
+        courses_.view_student_enrollments(
+            session_id,
+            srn);
 
     if (!enrollments) {
         return Result<StudentAcademicReport>::failure(
             enrollments.error());
     }
 
-    // Retrieve attendance for every enrolled course.
+    // Retrieve attendance for every enrolled course
+    // in the corresponding semester.
     for (const auto& enrollment : *enrollments.value()) {
-        Result<srs::attendance::AttendanceSummary> attendance_summary =
-            (*role.value() == Role::Student)
-                ? attendance_.view_my_summary(
-                      session_id,
-                      enrollment.course_code,
-                      enrollment.semester)
-                : attendance_.view_student_summary(
-                      session_id,
-                      srn,
-                      enrollment.course_code,
-                      enrollment.semester);
+
+        Result<srs::attendance::AttendanceSummary>
+            attendance_summary =
+                (*role.value() == Role::Student)
+                    ? attendance_.view_my_summary(
+                          session_id,
+                          enrollment.course_code,
+                          enrollment.semester)
+                    : attendance_.view_student_summary(
+                          session_id,
+                          srn,
+                          enrollment.course_code,
+                          enrollment.semester);
 
         if (!attendance_summary) {
             return Result<StudentAcademicReport>::failure(
                 attendance_summary.error());
         }
 
-        report.attendance.push_back(*attendance_summary.value());
+        report.attendance.push_back(
+            *attendance_summary.value());
     }
 
-    return Result<StudentAcademicReport>::success(std::move(report));
+    return Result<StudentAcademicReport>::success(
+        std::move(report));
 }
 
 // F-021: Generate the logged-in student's own report.
 Result<StudentAcademicReport> ReportService::generate_my_report(
     const std::string& session_id) const {
 
-    const auto username =
-        authentication_.username_for_session(session_id);
-
-    if (!username) {
-        return Result<StudentAcademicReport>::failure(
-            username.error());
-    }
-
-    const auto profile = students_.view_own_profile(session_id);
+    const auto profile =
+        students_.view_own_profile(session_id);
 
     if (!profile) {
         return Result<StudentAcademicReport>::failure(
             profile.error());
     }
 
-    return build_student_report(session_id, profile.value()->srn);
+    return build_student_report(
+        session_id,
+        profile.value()->srn);
 }
 
 // F-021: Admin can generate a report for any active student.
@@ -261,7 +286,9 @@ Result<StudentAcademicReport> ReportService::generate_student_report(
             allowed.error());
     }
 
-    return build_student_report(session_id, srn);
+    return build_student_report(
+        session_id,
+        srn);
 }
 
 // F-023: Generate course-level performance statistics.
@@ -270,6 +297,8 @@ Result<CoursePerformanceReport> ReportService::generate_course_report(
     const std::string& course_code,
     int semester) const {
 
+    // Only administrators can generate institution-level
+    // course performance reports.
     const auto allowed =
         accounts_.authorize(
             session_id,
@@ -285,7 +314,8 @@ Result<CoursePerformanceReport> ReportService::generate_course_report(
             ErrorCode::INVALID_INPUT);
     }
 
-    const auto course = courses_.get_course(course_code);
+    const auto course =
+        courses_.get_course(course_code);
 
     if (!course) {
         return Result<CoursePerformanceReport>::failure(
@@ -293,7 +323,10 @@ Result<CoursePerformanceReport> ReportService::generate_course_report(
     }
 
     const auto roster =
-        courses_.view_roster(session_id, course_code, semester);
+        courses_.view_roster(
+            session_id,
+            course_code,
+            semester);
 
     if (!roster) {
         return Result<CoursePerformanceReport>::failure(
@@ -301,9 +334,11 @@ Result<CoursePerformanceReport> ReportService::generate_course_report(
     }
 
     CoursePerformanceReport report;
+
     report.course_code = course.value()->code;
     report.course_title = course.value()->title;
     report.semester = semester;
+
     report.enrolled_students =
         static_cast<int>(roster.value()->size());
 
@@ -312,29 +347,45 @@ Result<CoursePerformanceReport> ReportService::generate_course_report(
     double lowest = 11.0;
     double total_attendance = 0.0;
 
+    // Process each enrolled student.
     for (const auto& student : *roster.value()) {
+
         const auto student_grades =
-            grades_.view_student_grades(session_id, student.srn);
+            grades_.view_student_grades(
+                session_id,
+                student.srn);
 
         if (!student_grades) {
             return Result<CoursePerformanceReport>::failure(
                 student_grades.error());
         }
 
+        // Calculate course grade statistics.
+        // IMPORTANT: Both marks-based grades and direct
+        // letter-only grades must be included.
         for (const auto& grade : *student_grades.value()) {
+
             if (grade.course_code == course_code &&
-                grade.semester == student.semester &&
-                grade.has_marks) {
+                grade.semester == student.semester) {
 
                 const double points = grade.grade_points;
 
                 total_grade_points += points;
-                highest = std::max(highest, points);
-                lowest = std::min(lowest, points);
+
+                highest = std::max(
+                    highest,
+                    points);
+
+                lowest = std::min(
+                    lowest,
+                    points);
+
                 ++report.graded_students;
             }
         }
 
+        // Retrieve the student's attendance for this course
+        // and semester.
         const auto attendance_summary =
             attendance_.view_student_summary(
                 session_id,
@@ -351,17 +402,23 @@ Result<CoursePerformanceReport> ReportService::generate_course_report(
             attendance_summary.value()->percentage;
     }
 
+    // Calculate average, highest and lowest grade points.
     if (report.graded_students > 0) {
+
         report.average_grade_points =
-            total_grade_points / report.graded_students;
+            total_grade_points /
+            report.graded_students;
 
         report.highest_grade_points = highest;
         report.lowest_grade_points = lowest;
     }
 
+    // Calculate average attendance among enrolled students.
     if (report.enrolled_students > 0) {
+
         report.average_attendance =
-            total_attendance / report.enrolled_students;
+            total_attendance /
+            report.enrolled_students;
     }
 
     return Result<CoursePerformanceReport>::success(
@@ -375,24 +432,31 @@ Result<void> ReportService::export_student_report_csv(
     const std::string& file_path) const {
 
     if (!has_non_whitespace(file_path)) {
-        return Result<void>::failure(ErrorCode::INVALID_INPUT);
+        return Result<void>::failure(
+            ErrorCode::INVALID_INPUT);
     }
 
-    // Supports both students exporting their own report and admins
-    // exporting another student's report.
-    const auto report = build_student_report(session_id, srn);
+    // Supports students exporting their own report
+    // and administrators exporting another student's report.
+    const auto report =
+        build_student_report(
+            session_id,
+            srn);
 
     if (!report) {
-        return Result<void>::failure(report.error());
+        return Result<void>::failure(
+            report.error());
     }
 
     std::ofstream file(file_path);
 
     if (!file.is_open()) {
-        return Result<void>::failure(ErrorCode::INTERNAL_ERROR);
+        return Result<void>::failure(
+            ErrorCode::INTERNAL_ERROR);
     }
 
     file << "STUDENT ACADEMIC REPORT\n";
+
     file << "SRN,Name,Programme,Current Semester\n";
 
     file << csv_escape(report.value()->profile.srn) << ','
@@ -400,6 +464,7 @@ Result<void> ReportService::export_student_report_csv(
          << csv_escape(report.value()->profile.programme) << ','
          << report.value()->profile.semester << '\n';
 
+    // Semester-wise GPA.
     file << "\nSEMESTER-WISE GPA\n";
     file << "Semester,Credits,GPA\n";
 
@@ -412,6 +477,7 @@ Result<void> ReportService::export_student_report_csv(
              << semester.gpa << '\n';
     }
 
+    // Overall CGPA.
     file << "\nCGPA SUMMARY\n";
     file << "Total Credits,CGPA\n";
 
@@ -419,10 +485,14 @@ Result<void> ReportService::export_student_report_csv(
          << std::fixed << std::setprecision(2)
          << report.value()->academic_summary.cgpa << '\n';
 
+    // Course grades.
     file << "\nCOURSE GRADES\n";
-    file << "Course Code,Course Title,Semester,Credits,Marks,Letter Grade,Grade Points\n";
+
+    file << "Course Code,Course Title,Semester,Credits,"
+            "Marks,Letter Grade,Grade Points\n";
 
     for (const auto& grade : report.value()->grades) {
+
         file << csv_escape(grade.course_code) << ','
              << csv_escape(grade.course_title) << ','
              << grade.semester << ','
@@ -437,10 +507,14 @@ Result<void> ReportService::export_student_report_csv(
              << grade.grade_points << '\n';
     }
 
+    // Attendance summary.
     file << "\nATTENDANCE SUMMARY\n";
-    file << "Course Code,Semester,Total Sessions,Present Sessions,Percentage,Below Threshold\n";
+
+    file << "Course Code,Semester,Total Sessions,"
+            "Present Sessions,Percentage,Below Threshold\n";
 
     for (const auto& item : report.value()->attendance) {
+
         file << csv_escape(item.course_code) << ','
              << item.semester << ','
              << item.total_sessions << ','
@@ -453,7 +527,8 @@ Result<void> ReportService::export_student_report_csv(
     file.close();
 
     if (!file) {
-        return Result<void>::failure(ErrorCode::INTERNAL_ERROR);
+        return Result<void>::failure(
+            ErrorCode::INTERNAL_ERROR);
     }
 
     return Result<void>::success();
@@ -466,32 +541,47 @@ Result<void> ReportService::export_student_report_text(
     const std::string& file_path) const {
 
     if (!has_non_whitespace(file_path)) {
-        return Result<void>::failure(ErrorCode::INVALID_INPUT);
+        return Result<void>::failure(
+            ErrorCode::INVALID_INPUT);
     }
 
-    const auto report = build_student_report(session_id, srn);
+    const auto report =
+        build_student_report(
+            session_id,
+            srn);
 
     if (!report) {
-        return Result<void>::failure(report.error());
+        return Result<void>::failure(
+            report.error());
     }
 
     std::ofstream file(file_path);
 
     if (!file.is_open()) {
-        return Result<void>::failure(ErrorCode::INTERNAL_ERROR);
+        return Result<void>::failure(
+            ErrorCode::INTERNAL_ERROR);
     }
 
     file << "========================================\n";
     file << "         STUDENT ACADEMIC REPORT\n";
     file << "========================================\n\n";
 
+    // Student profile.
     file << "STUDENT PROFILE\n";
-    file << "SRN: " << report.value()->profile.srn << '\n';
-    file << "Name: " << report.value()->profile.name << '\n';
-    file << "Programme: " << report.value()->profile.programme << '\n';
+
+    file << "SRN: "
+         << report.value()->profile.srn << '\n';
+
+    file << "Name: "
+         << report.value()->profile.name << '\n';
+
+    file << "Programme: "
+         << report.value()->profile.programme << '\n';
+
     file << "Current Semester: "
          << report.value()->profile.semester << "\n\n";
 
+    // Semester-wise GPA.
     file << "SEMESTER-WISE GPA\n";
 
     for (const auto& semester :
@@ -499,19 +589,26 @@ Result<void> ReportService::export_student_report_text(
 
         file << "Semester " << semester.semester
              << " | Credits: " << semester.credits
-             << " | GPA: " << std::fixed << std::setprecision(2)
+             << " | GPA: "
+             << std::fixed << std::setprecision(2)
              << semester.gpa << '\n';
     }
 
+    // Overall CGPA.
     file << "\nTotal Credits: "
-         << report.value()->academic_summary.total_credits << '\n';
+         << report.value()->academic_summary.total_credits
+         << '\n';
 
-    file << "CGPA: " << std::fixed << std::setprecision(2)
-         << report.value()->academic_summary.cgpa << "\n\n";
+    file << "CGPA: "
+         << std::fixed << std::setprecision(2)
+         << report.value()->academic_summary.cgpa
+         << "\n\n";
 
+    // Course grades.
     file << "COURSE GRADES\n";
 
     for (const auto& grade : report.value()->grades) {
+
         file << grade.course_code << " - "
              << grade.course_title
              << " | Semester: " << grade.semester
@@ -529,15 +626,18 @@ Result<void> ReportService::export_student_report_text(
              << '\n';
     }
 
+    // Attendance summary.
     file << "\nATTENDANCE SUMMARY\n";
 
     for (const auto& item : report.value()->attendance) {
+
         file << item.course_code
              << " | Semester: " << item.semester
              << " | Sessions: " << item.total_sessions
              << " | Present: " << item.present_sessions
-             << " | Attendance: " << std::fixed
-             << std::setprecision(2) << item.percentage << "%"
+             << " | Attendance: "
+             << std::fixed << std::setprecision(2)
+             << item.percentage << "%"
              << " | Below Threshold: "
              << (item.below_threshold ? "Yes" : "No")
              << '\n';
@@ -546,7 +646,8 @@ Result<void> ReportService::export_student_report_text(
     file.close();
 
     if (!file) {
-        return Result<void>::failure(ErrorCode::INTERNAL_ERROR);
+        return Result<void>::failure(
+            ErrorCode::INTERNAL_ERROR);
     }
 
     return Result<void>::success();
