@@ -62,6 +62,8 @@ add_library(srs_core STATIC
     src/persistence/database.cpp
     src/persistence/database_backup.cpp
     src/persistence/repositories.cpp
+    src/persistence/database_backup.cpp
+    src/persistence/audit_logger.cpp
 )
 
 target_include_directories(srs_core PUBLIC
