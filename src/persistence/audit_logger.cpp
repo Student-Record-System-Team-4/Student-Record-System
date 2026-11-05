@@ -5,7 +5,8 @@
 namespace srs::persistence {
 
 AuditLogger::AuditLogger(Database& database)
-    : database_(database) {}
+    : database_(database) {
+}
 
 srs::core::Result<void> AuditLogger::log(
     const std::string& username,
@@ -29,38 +30,77 @@ srs::core::Result<void> AuditLogger::log(
 
     sqlite3_stmt* statement = nullptr;
 
-    if (sqlite3_prepare_v2(
-            database_.handle(),
-            sql,
-            -1,
-            &statement,
-            nullptr
-        ) != SQLITE_OK) {
+    const int prepare_result = sqlite3_prepare_v2(
+        database_.handle(),
+        sql,
+        -1,
+        &statement,
+        nullptr
+    );
+
+    if (prepare_result != SQLITE_OK) {
         return srs::core::Result<void>::failure(
             srs::core::ErrorCode::INTERNAL_ERROR
         );
     }
 
+    // Username is optional. Store SQL NULL when it is empty.
+    if (username.empty()) {
+        sqlite3_bind_null(statement, 1);
+    } else {
+        sqlite3_bind_text(
+            statement,
+            1,
+            username.c_str(),
+            -1,
+            SQLITE_TRANSIENT
+        );
+    }
+
     sqlite3_bind_text(
-        statement, 1, username.c_str(), -1, SQLITE_TRANSIENT
-    );
-    sqlite3_bind_text(
-        statement, 2, action.c_str(), -1, SQLITE_TRANSIENT
-    );
-    sqlite3_bind_text(
-        statement, 3, entity.c_str(), -1, SQLITE_TRANSIENT
-    );
-    sqlite3_bind_text(
-        statement, 4, entity_id.c_str(), -1, SQLITE_TRANSIENT
-    );
-    sqlite3_bind_text(
-        statement, 5, details.c_str(), -1, SQLITE_TRANSIENT
+        statement,
+        2,
+        action.c_str(),
+        -1,
+        SQLITE_TRANSIENT
     );
 
-    const int result = sqlite3_step(statement);
+    sqlite3_bind_text(
+        statement,
+        3,
+        entity.c_str(),
+        -1,
+        SQLITE_TRANSIENT
+    );
+
+    if (entity_id.empty()) {
+        sqlite3_bind_null(statement, 4);
+    } else {
+        sqlite3_bind_text(
+            statement,
+            4,
+            entity_id.c_str(),
+            -1,
+            SQLITE_TRANSIENT
+        );
+    }
+
+    if (details.empty()) {
+        sqlite3_bind_null(statement, 5);
+    } else {
+        sqlite3_bind_text(
+            statement,
+            5,
+            details.c_str(),
+            -1,
+            SQLITE_TRANSIENT
+        );
+    }
+
+    const int step_result = sqlite3_step(statement);
     sqlite3_finalize(statement);
 
-    if (result != SQLITE_DONE) {
+    if (step_result != SQLITE_DONE) {
         return srs::core::Result<void>::failure(
             srs::core::ErrorCode::INTERNAL_ERROR
         );
