@@ -72,17 +72,20 @@ target_include_directories(
     PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
+target_link_libraries(
+    srs_core
+    PUBLIC ${SRS_SQLITE_TARGET}
+)
+
 # Application executable
 add_executable(student_record_system
     src/main.cpp
 )
 
 target_link_libraries(
-    srs_core
-    PUBLIC SQLite::SQLite3
+    student_record_system
+    PRIVATE srs_core
 )
-
-
 
 # Test executable
 add_executable(test_validator
