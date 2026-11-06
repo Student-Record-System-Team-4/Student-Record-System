@@ -61,7 +61,9 @@ add_library(srs_core STATIC
     src/attendance/attendance_service.cpp
     src/reports/report_service.cpp
     src/persistence/database.cpp
+    src/persistence/database_backup.cpp
     src/persistence/repositories.cpp
+    src/persistence/audit_logger.cpp
     src/ui/cli.cpp
 )
 
@@ -105,6 +107,7 @@ add_executable(test_validator
     tests/sample_test.cpp
     tests/test_persistence.cpp
     tests/course_management_test.cpp
+    tests/test_database_backup_audit.cpp
 )
 
 target_link_libraries(
