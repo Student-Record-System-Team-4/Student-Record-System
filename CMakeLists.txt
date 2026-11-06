@@ -48,7 +48,6 @@ FetchContent_MakeAvailable(Catch2)
 list(APPEND CMAKE_MODULE_PATH "${catch2_SOURCE_DIR}/extras")
 include(Catch)
 
-
 # Core library
 add_library(srs_core STATIC
     src/core/application.cpp
@@ -79,9 +78,11 @@ add_executable(student_record_system
 )
 
 target_link_libraries(
-    student_record_system
-    PRIVATE srs_core
+    srs_core
+    PUBLIC SQLite::SQLite3
 )
+
+
 
 # Test executable
 add_executable(test_validator
