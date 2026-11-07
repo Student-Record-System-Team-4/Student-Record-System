@@ -1,3 +1,0 @@
-"C:\Program Files\CMake\bin\cmake.exe" -E rm -f CMakeFiles\test_validator.dir/objects.a
-C:\MinGW\bin\ar.exe qc CMakeFiles\test_validator.dir/objects.a @CMakeFiles\test_validator.dir\objects1.rsp
-C:\MinGW\bin\c++.exe -g --coverage -Wl,--whole-archive CMakeFiles\test_validator.dir/objects.a -Wl,--no-whole-archive -o test_validator.exe -Wl,--out-implib,libtest_validator.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\test_validator.dir\linkLibs.rsp

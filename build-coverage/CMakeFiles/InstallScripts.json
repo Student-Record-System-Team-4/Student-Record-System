@@ -1,9 +1,0 @@
-{
-	"InstallScripts" : 
-	[
-		"E:/SE Lab/Mini Project/Student-Record-System/build-coverage/cmake_install.cmake",
-		"E:/SE Lab/Mini Project/Student-Record-System/build-coverage/_deps/catch2-build/cmake_install.cmake",
-		"E:/SE Lab/Mini Project/Student-Record-System/build-coverage/_deps/catch2-build/src/cmake_install.cmake"
-	],
-	"Parallel" : false
-}
