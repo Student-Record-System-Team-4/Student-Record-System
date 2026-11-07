@@ -10,6 +10,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 include(CTest)
 include(FetchContent)
 
+option(SRS_ENABLE_COVERAGE "Enable GCC/Clang coverage instrumentation" OFF)
+
 # SQLite
 find_package(SQLite3 QUIET)
 
@@ -75,6 +77,15 @@ target_link_libraries(
     PUBLIC ${SRS_SQLITE_TARGET}
 )
 
+if(SRS_ENABLE_COVERAGE)
+    if(NOT CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        message(FATAL_ERROR "SRS_ENABLE_COVERAGE requires GCC or Clang")
+    endif()
+
+    target_compile_options(srs_core PRIVATE --coverage)
+    target_link_options(srs_core PUBLIC --coverage)
+endif()
+
 # Application executable
 add_executable(student_record_system
     src/main.cpp
@@ -116,19 +127,16 @@ target_link_libraries(
 
 # Register tests with CTest
 add_test(
-    NAME test_validator
+    NAME unit_tests
     COMMAND test_validator
 )
+set_tests_properties(unit_tests PROPERTIES LABELS "UNIT;INTEGRATION")
 
-# Smoke test
-if(NOT WIN32)
-    add_test(
-        NAME cli_smoke
-        COMMAND sh -c "rm -f cli-smoke-test.db && printf 'admin01\nAdmin12345\nAdmin12345\n1\nadmin01\nAdmin12345\n0\n0\n' | $<TARGET_FILE:student_record_system> cli-smoke-test.db && rm -f cli-smoke-test.db"
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    )
-
-    set_tests_properties(cli_smoke PROPERTIES
-        PASS_REGULAR_EXPRESSION "Welcome, admin01 \\(Admin\\)\\..*Goodbye\\."
-    )
-endif()
+add_test(
+    NAME system_test
+    COMMAND ${CMAKE_COMMAND}
+        -DAPPLICATION=$<TARGET_FILE:student_record_system>
+        -DWORKING_DIRECTORY=${CMAKE_CURRENT_BINARY_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/system_test.cmake
+)
+set_tests_properties(system_test PROPERTIES LABELS "SYSTEM")
