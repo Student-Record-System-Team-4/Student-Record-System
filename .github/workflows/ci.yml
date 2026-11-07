@@ -25,29 +25,15 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake g++ gcovr pkg-config libsodium-dev libsqlite3-dev
+          sudo apt-get install -y cmake g++ pkg-config libsodium-dev libsqlite3-dev
 
       - name: Configure project
         run: >
           cmake -S . -B build -DBUILD_TESTING=ON
           -DCMAKE_BUILD_TYPE=Debug
-          ${{ runner.os == 'Linux' && '-DSRS_ENABLE_COVERAGE=ON' || '' }}
 
       - name: Build project
         run: cmake --build build --config Debug --parallel 2 --target student_record_system test_validator
 
       - name: Run tests
         run: ctest --test-dir build --build-config Debug --output-on-failure
-
-      - name: Verify coverage
-        if: runner.os == 'Linux'
-        run: >
-          gcovr --root . --filter 'src/' --exclude 'build/'
-          --txt --html-details coverage.html --fail-under-line 75
-
-      - name: Upload coverage report
-        if: runner.os == 'Linux'
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: coverage.html

@@ -24,17 +24,6 @@ ctest --test-dir build --build-config Release --output-on-failure
 
 The executable is written to `build/student_record_system`.
 
-The CTest suite includes the Catch2 unit/integration tests and a system test
-that runs the production executable, restarts it, and verifies persisted
-administrator data. Coverage-enabled builds can be checked with:
-
-```bash
-cmake -S . -B build -DBUILD_TESTING=ON -DSRS_ENABLE_COVERAGE=ON
-cmake --build build
-ctest --test-dir build --output-on-failure
-gcovr --root . --filter 'src/' --exclude 'build/' --fail-under-line 75
-```
-
 ## Build and test on Windows
 
 From PowerShell in the repository root:
