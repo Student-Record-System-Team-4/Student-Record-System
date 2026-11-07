@@ -1,0 +1,3 @@
+E:/SE Lab/Mini Project/Student-Record-System/build-coverage/_deps/catch2-subbuild/CMakeFiles/catch2-populate.dir
+E:/SE Lab/Mini Project/Student-Record-System/build-coverage/_deps/catch2-subbuild/CMakeFiles/edit_cache.dir
+E:/SE Lab/Mini Project/Student-Record-System/build-coverage/_deps/catch2-subbuild/CMakeFiles/rebuild_cache.dir

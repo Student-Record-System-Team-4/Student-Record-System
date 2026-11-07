@@ -24,6 +24,34 @@ ctest --test-dir build --build-config Release --output-on-failure
 
 The executable is written to `build/student_record_system`.
 
+## Code coverage
+
+Coverage is measured for the production code under `src/` on Ubuntu CI. The
+workflow runs the tests with coverage instrumentation and fails if line
+coverage is below 75%:
+
+The commands below require a current MinGW-w64 toolchain. The legacy MinGW
+6.3 compiler is not compatible with Catch2 3.8.1 and fails before coverage is
+generated. Use Visual Studio for Windows builds, or install MinGW-w64 through
+MSYS2 and select its `mingw64` compiler.
+
+```powershell
+py -m pip install gcovr
+if (Test-Path build-coverage) { Remove-Item -Recurse -Force build-coverage }
+cmake -S . -B build-coverage -G "MinGW Makefiles" `
+  -DBUILD_TESTING=ON `
+  -DCMAKE_BUILD_TYPE=Debug `
+  -DSRS_ENABLE_COVERAGE=ON
+cmake --build build-coverage --parallel 2
+ctest --test-dir build-coverage --output-on-failure
+gcovr --root . --filter "src" --exclude "build-coverage" `
+  --txt --html-details coverage.html --fail-under-line 75
+```
+
+The terminal output shows the percentage. In GitHub, open the completed
+workflow run under **Actions**, expand **Verify coverage** to see the result,
+or download the `coverage-report` artifact and open `coverage.html`.
+
 ## Build and test on Windows
 
 From PowerShell in the repository root:

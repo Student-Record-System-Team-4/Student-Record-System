@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html class="theme-green">
+
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title>GCC Code Coverage Report</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" href="coverage.css"/>
+    <script src="coverage.js" charset="UTF-8"></script>
+  </head>
+
+  <body>
+    <div class="Layout-main">
+      <div class="Layout-main-centered-lg" style="max-width: 1280px;">
+        <div class="d-flex flex-justify-center">
+          <h1>
+            <a href="coverage.html" style="cursor: default; text-decoration: none">
+              GCC Code Coverage Report</a>
+          </h1>
+        </div>
+        <hr class="block-separator"/>
+        <header>
+<div id="summary">
+  <div class="containter-xl clearfix">
+    <div class="col-sm-12 col-lg-9 float-left d-flex flex-column pl-3">
+      <div class="d-flex">
+        <div class="mr-2 color-fg-accent transy-2">
+          <svg aria-label="Directory" aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-file-directory-fill hx_color-icon-directory">
+            <path d="M1.75 1A1.75 1.75 0 0 0 0 2.75v10.5C0 14.216.784 15 1.75 15h12.5A1.75 1.75 0 0 0 16 13.25v-8.5A1.75 1.75 0 0 0 14.25 3H7.5a.25.25 0 0 1-.2-.1l-.9-1.2C6.07 1.26 5.55 1 5 1H1.75Z"></path>
+          </svg>
+        </div>
+        <span>src/</span>
+      </div>
+      <div class="d-flex flex-wrap" style="margin-bottom: 2px;">
+        <div class="mr-2" style="min-width: 70px;">Coverage:</div>
+        <span class="IssueLabel coverage-low color-fg-on-emphasis mr-1">low: &ge; 0%</span>
+        <span class="IssueLabel coverage-medium color-fg-on-emphasis mr-1">medium: &ge; 75.0%</span>
+        <span class="IssueLabel coverage-high color-fg-on-emphasis mr-1">high: &ge; 90.0%</span>
+      </div>
+    </div>
+    <div class="col-sm-12 col-lg-3 float-left d-flex flex-column text-right flex-justify-end pr-3">
+      <div class="d-flex">
+        <div class="mr-2">Lines:</div>
+        <div class="mr-2" style="margin: auto;">0 / 2621</div>
+        <div class="Label--minw"><span class="coverage-none IssueLabel color-fg-on-emphasis mr-1">0.0%</span></div>
+      </div>
+      <div class="d-flex">
+        <div class="mr-2">Branches:</div>
+        <div class="mr-2" style="margin: auto;">0 / 5109</div>
+        <div class="Label--minw"><span class="coverage-none IssueLabel color-fg-on-emphasis mr-1">0.0%</span></div>
+      </div>
+      <div class="d-flex">
+        <div class="mr-2">Functions:</div>
+        <div class="mr-2" style="margin: auto;">0 / 542</div>
+        <div class="Label--minw"><span class="coverage-none IssueLabel color-fg-on-emphasis mr-1">0.0%</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+        </header>
+        <hr/>
+        <nav>
+<div class="m-3">
+  <a href="coverage.functions.html">List of functions</a>
+</div>
+
+        </nav>
+        <main>
+<div class="Box m-3 filelist">
+  <div class="Box-header py-2 d-flex sticky">
+    <div role="rowheader" class="color-fg-muted flex-auto min-width-0 d-flex col-md-2 gcovr-m-l-5 sortable sorted-ascending">File</div>
+    <div role="rowheader" class="color-fg-muted flex-auto min-width-0 d-flex flex-justify-end flex-wrap flex-items-baseline gcovr-m-l-5 gcovr-h-100 sortable">Lines</div>
+    <div role="rowheader" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5 sortable">Branches</div>
+    <div role="rowheader" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5 sortable">Functions</div>
+  </div>
+  <div class="Box-row Box-row--focus-gray py-2 d-flex">
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex col-md-2 gcovr-m-l-5">
+      <span class="mr-2">
+        <svg aria-hidden="true" focusable="false" role="img" class="color-fg-muted" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="display: inline-block; user-select: none; vertical-align: text-bottom; overflow: visible;"><path d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 9 4.25V1.5Zm6.75.062V4.25c0 .138.112.25.25.25h2.688l-.011-.013-2.914-2.914-.013-.011Z"></path></svg>
+      </span>
+      <span class="css-truncate css-truncate-target d-block width-fit">
+        <a class="" title="attendance/attendance_service.cpp" href="coverage.attendance_service.cpp.3669c9f1885ca0a9ed291011dfb01177.html">attendance/attendance_service.cpp</a>
+      </span>
+    </div>
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex flex-justify-end flex-wrap flex-items-baseline gcovr-m-l-5 gcovr-h-100" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 214</span>
+      <span class="meter Progress Progress--large d-inline-flex mr-2" style="width: 200px;">
+        <span class="Progress-item coverage-none" style="width: 0.0%"></span>
+      </span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 378</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 16</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div >
+    </div>
+  </div>
+  <div class="Box-row Box-row--focus-gray py-2 d-flex">
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex col-md-2 gcovr-m-l-5">
+      <span class="mr-2">
+        <svg aria-hidden="true" focusable="false" role="img" class="color-fg-muted" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="display: inline-block; user-select: none; vertical-align: text-bottom; overflow: visible;"><path d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 9 4.25V1.5Zm6.75.062V4.25c0 .138.112.25.25.25h2.688l-.011-.013-2.914-2.914-.013-.011Z"></path></svg>
+      </span>
+      <span class="css-truncate css-truncate-target d-block width-fit">
+        <a class="" title="attendance/attendance_service.h" href="coverage.attendance_service.h.3cf7d8dce86f27b772cc35a16330e2a1.html">attendance/attendance_service.h</a>
+      </span>
+    </div>
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex flex-justify-end flex-wrap flex-items-baseline gcovr-m-l-5 gcovr-h-100" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 4</span>
+      <span class="meter Progress Progress--large d-inline-flex mr-2" style="width: 200px;">
+        <span class="Progress-item coverage-none" style="width: 0.0%"></span>
+      </span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 10</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 10</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div >
+    </div>
+  </div>
+  <div class="Box-row Box-row--focus-gray py-2 d-flex">
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex col-md-2 gcovr-m-l-5">
+      <span class="mr-2">
+        <svg aria-hidden="true" focusable="false" role="img" class="color-fg-muted" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="display: inline-block; user-select: none; vertical-align: text-bottom; overflow: visible;"><path d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 9 4.25V1.5Zm6.75.062V4.25c0 .138.112.25.25.25h2.688l-.011-.013-2.914-2.914-.013-.011Z"></path></svg>
+      </span>
+      <span class="css-truncate css-truncate-target d-block width-fit">
+        <a class="" title="auth/access_control.cpp" href="coverage.access_control.cpp.54c43015d0cea7b5bf20597a06f04741.html">auth/access_control.cpp</a>
+      </span>
+    </div>
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex flex-justify-end flex-wrap flex-items-baseline gcovr-m-l-5 gcovr-h-100" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 20</span>
+      <span class="meter Progress Progress--large d-inline-flex mr-2" style="width: 200px;">
+        <span class="Progress-item coverage-none" style="width: 0.0%"></span>
+      </span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 38</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 1</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div >
+    </div>
+  </div>
+  <div class="Box-row Box-row--focus-gray py-2 d-flex">
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex col-md-2 gcovr-m-l-5">
+      <span class="mr-2">
+        <svg aria-hidden="true" focusable="false" role="img" class="color-fg-muted" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="display: inline-block; user-select: none; vertical-align: text-bottom; overflow: visible;"><path d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 9 4.25V1.5Zm6.75.062V4.25c0 .138.112.25.25.25h2.688l-.011-.013-2.914-2.914-.013-.011Z"></path></svg>
+      </span>
+      <span class="css-truncate css-truncate-target d-block width-fit">
+        <a class="" title="auth/authentication.cpp" href="coverage.authentication.cpp.db5dda88a41bb3a0b1f4c99c6ddeada3.html">auth/authentication.cpp</a>
+      </span>
+    </div>
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex flex-justify-end flex-wrap flex-items-baseline gcovr-m-l-5 gcovr-h-100" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 136</span>
+      <span class="meter Progress Progress--large d-inline-flex mr-2" style="width: 200px;">
+        <span class="Progress-item coverage-none" style="width: 0.0%"></span>
+      </span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 278</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 14</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div >
+    </div>
+  </div>
+  <div class="Box-row Box-row--focus-gray py-2 d-flex">
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex col-md-2 gcovr-m-l-5">
+      <span class="mr-2">
+        <svg aria-hidden="true" focusable="false" role="img" class="color-fg-muted" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="display: inline-block; user-select: none; vertical-align: text-bottom; overflow: visible;"><path d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 9 4.25V1.5Zm6.75.062V4.25c0 .138.112.25.25.25h2.688l-.011-.013-2.914-2.914-.013-.011Z"></path></svg>
+      </span>
+      <span class="css-truncate css-truncate-target d-block width-fit">
+        <a class="" title="auth/authentication.h" href="coverage.authentication.h.8ebf81192da008ed357f82eb6bbbaa55.html">auth/authentication.h</a>
+      </span>
+    </div>
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex flex-justify-end flex-wrap flex-items-baseline gcovr-m-l-5 gcovr-h-100" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 4</span>
+      <span class="meter Progress Progress--large d-inline-flex mr-2" style="width: 200px;">
+        <span class="Progress-item coverage-none" style="width: 0.0%"></span>
+      </span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 4</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 7</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div >
+    </div>
+  </div>
+  <div class="Box-row Box-row--focus-gray py-2 d-flex">
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex col-md-2 gcovr-m-l-5">
+      <span class="mr-2">
+        <svg aria-hidden="true" focusable="false" role="img" class="color-fg-muted" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="display: inline-block; user-select: none; vertical-align: text-bottom; overflow: visible;"><path d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 9 4.25V1.5Zm6.75.062V4.25c0 .138.112.25.25.25h2.688l-.011-.013-2.914-2.914-.013-.011Z"></path></svg>
+      </span>
+      <span class="css-truncate css-truncate-target d-block width-fit">
+        <a class="" title="auth/password_hasher.cpp" href="coverage.password_hasher.cpp.62ab0cf9107b33d3a3bc808bde751ff7.html">auth/password_hasher.cpp</a>
+      </span>
+    </div>
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex flex-justify-end flex-wrap flex-items-baseline gcovr-m-l-5 gcovr-h-100" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 113</span>
+      <span class="meter Progress Progress--large d-inline-flex mr-2" style="width: 200px;">
+        <span class="Progress-item coverage-none" style="width: 0.0%"></span>
+      </span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 124</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 12</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div >
+    </div>
+  </div>
+  <div class="Box-row Box-row--focus-gray py-2 d-flex">
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex col-md-2 gcovr-m-l-5">
+      <span class="mr-2">
+        <svg aria-hidden="true" focusable="false" role="img" class="color-fg-muted" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="display: inline-block; user-select: none; vertical-align: text-bottom; overflow: visible;"><path d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 9 4.25V1.5Zm6.75.062V4.25c0 .138.112.25.25.25h2.688l-.011-.013-2.914-2.914-.013-.011Z"></path></svg>
+      </span>
+      <span class="css-truncate css-truncate-target d-block width-fit">
+        <a class="" title="auth/user_accounts.cpp" href="coverage.user_accounts.cpp.557acb3034ab006473d7400aae8411b6.html">auth/user_accounts.cpp</a>
+      </span>
+    </div>
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex flex-justify-end flex-wrap flex-items-baseline gcovr-m-l-5 gcovr-h-100" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 55</span>
+      <span class="meter Progress Progress--large d-inline-flex mr-2" style="width: 200px;">
+        <span class="Progress-item coverage-none" style="width: 0.0%"></span>
+      </span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 100</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 8</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div >
+    </div>
+  </div>
+  <div class="Box-row Box-row--focus-gray py-2 d-flex">
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex col-md-2 gcovr-m-l-5">
+      <span class="mr-2">
+        <svg aria-hidden="true" focusable="false" role="img" class="color-fg-muted" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="display: inline-block; user-select: none; vertical-align: text-bottom; overflow: visible;"><path d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 9 4.25V1.5Zm6.75.062V4.25c0 .138.112.25.25.25h2.688l-.011-.013-2.914-2.914-.013-.011Z"></path></svg>
+      </span>
+      <span class="css-truncate css-truncate-target d-block width-fit">
+        <a class="" title="core/application.cpp" href="coverage.application.cpp.a4067b9dacc8436c09fa27c71399e888.html">core/application.cpp</a>
+      </span>
+    </div>
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex flex-justify-end flex-wrap flex-items-baseline gcovr-m-l-5 gcovr-h-100" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 2</span>
+      <span class="meter Progress Progress--large d-inline-flex mr-2" style="width: 200px;">
+        <span class="Progress-item coverage-none" style="width: 0.0%"></span>
+      </span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="-">
+      <span class="text-small color-fg-muted mr-2">-</span>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 1</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div >
+    </div>
+  </div>
+  <div class="Box-row Box-row--focus-gray py-2 d-flex">
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex col-md-2 gcovr-m-l-5">
+      <span class="mr-2">
+        <svg aria-hidden="true" focusable="false" role="img" class="color-fg-muted" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="display: inline-block; user-select: none; vertical-align: text-bottom; overflow: visible;"><path d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 9 4.25V1.5Zm6.75.062V4.25c0 .138.112.25.25.25h2.688l-.011-.013-2.914-2.914-.013-.011Z"></path></svg>
+      </span>
+      <span class="css-truncate css-truncate-target d-block width-fit">
+        <a class="" title="core/result.h" href="coverage.result.h.e00a529b9ed8fb6df6dd787956124f1e.html">core/result.h</a>
+      </span>
+    </div>
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex flex-justify-end flex-wrap flex-items-baseline gcovr-m-l-5 gcovr-h-100" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 119</span>
+      <span class="meter Progress Progress--large d-inline-flex mr-2" style="width: 200px;">
+        <span class="Progress-item coverage-none" style="width: 0.0%"></span>
+      </span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 44</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 200</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div >
+    </div>
+  </div>
+  <div class="Box-row Box-row--focus-gray py-2 d-flex">
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex col-md-2 gcovr-m-l-5">
+      <span class="mr-2">
+        <svg aria-hidden="true" focusable="false" role="img" class="color-fg-muted" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="display: inline-block; user-select: none; vertical-align: text-bottom; overflow: visible;"><path d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 9 4.25V1.5Zm6.75.062V4.25c0 .138.112.25.25.25h2.688l-.011-.013-2.914-2.914-.013-.011Z"></path></svg>
+      </span>
+      <span class="css-truncate css-truncate-target d-block width-fit">
+        <a class="" title="core/validator.h" href="coverage.validator.h.5851b7f8d0ca732ba90ccac179c7b9f6.html">core/validator.h</a>
+      </span>
+    </div>
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex flex-justify-end flex-wrap flex-items-baseline gcovr-m-l-5 gcovr-h-100" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 22</span>
+      <span class="meter Progress Progress--large d-inline-flex mr-2" style="width: 200px;">
+        <span class="Progress-item coverage-none" style="width: 0.0%"></span>
+      </span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 48</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 2</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div >
+    </div>
+  </div>
+  <div class="Box-row Box-row--focus-gray py-2 d-flex">
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex col-md-2 gcovr-m-l-5">
+      <span class="mr-2">
+        <svg aria-hidden="true" focusable="false" role="img" class="color-fg-muted" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="display: inline-block; user-select: none; vertical-align: text-bottom; overflow: visible;"><path d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 9 4.25V1.5Zm6.75.062V4.25c0 .138.112.25.25.25h2.688l-.011-.013-2.914-2.914-.013-.011Z"></path></svg>
+      </span>
+      <span class="css-truncate css-truncate-target d-block width-fit">
+        <a class="" title="course/course_service.cpp" href="coverage.course_service.cpp.c34342dc08664cc052c54274ca81d839.html">course/course_service.cpp</a>
+      </span>
+    </div>
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex flex-justify-end flex-wrap flex-items-baseline gcovr-m-l-5 gcovr-h-100" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 267</span>
+      <span class="meter Progress Progress--large d-inline-flex mr-2" style="width: 200px;">
+        <span class="Progress-item coverage-none" style="width: 0.0%"></span>
+      </span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 498</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 19</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div >
+    </div>
+  </div>
+  <div class="Box-row Box-row--focus-gray py-2 d-flex">
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex col-md-2 gcovr-m-l-5">
+      <span class="mr-2">
+        <svg aria-hidden="true" focusable="false" role="img" class="color-fg-muted" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="display: inline-block; user-select: none; vertical-align: text-bottom; overflow: visible;"><path d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 9 4.25V1.5Zm6.75.062V4.25c0 .138.112.25.25.25h2.688l-.011-.013-2.914-2.914-.013-.011Z"></path></svg>
+      </span>
+      <span class="css-truncate css-truncate-target d-block width-fit">
+        <a class="" title="course/course_service.h" href="coverage.course_service.h.221ea103de029e6e7a884017c6b15900.html">course/course_service.h</a>
+      </span>
+    </div>
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex flex-justify-end flex-wrap flex-items-baseline gcovr-m-l-5 gcovr-h-100" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 4</span>
+      <span class="meter Progress Progress--large d-inline-flex mr-2" style="width: 200px;">
+        <span class="Progress-item coverage-none" style="width: 0.0%"></span>
+      </span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 4</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 13</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div >
+    </div>
+  </div>
+  <div class="Box-row Box-row--focus-gray py-2 d-flex">
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex col-md-2 gcovr-m-l-5">
+      <span class="mr-2">
+        <svg aria-hidden="true" focusable="false" role="img" class="color-fg-muted" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="display: inline-block; user-select: none; vertical-align: text-bottom; overflow: visible;"><path d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 9 4.25V1.5Zm6.75.062V4.25c0 .138.112.25.25.25h2.688l-.011-.013-2.914-2.914-.013-.011Z"></path></svg>
+      </span>
+      <span class="css-truncate css-truncate-target d-block width-fit">
+        <a class="" title="grades/grade_service.cpp" href="coverage.grade_service.cpp.5edbaad5f5b03a4775d28a5720ea6b67.html">grades/grade_service.cpp</a>
+      </span>
+    </div>
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex flex-justify-end flex-wrap flex-items-baseline gcovr-m-l-5 gcovr-h-100" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 156</span>
+      <span class="meter Progress Progress--large d-inline-flex mr-2" style="width: 200px;">
+        <span class="Progress-item coverage-none" style="width: 0.0%"></span>
+      </span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 276</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 18</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div >
+    </div>
+  </div>
+  <div class="Box-row Box-row--focus-gray py-2 d-flex">
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex col-md-2 gcovr-m-l-5">
+      <span class="mr-2">
+        <svg aria-hidden="true" focusable="false" role="img" class="color-fg-muted" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="display: inline-block; user-select: none; vertical-align: text-bottom; overflow: visible;"><path d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 9 4.25V1.5Zm6.75.062V4.25c0 .138.112.25.25.25h2.688l-.011-.013-2.914-2.914-.013-.011Z"></path></svg>
+      </span>
+      <span class="css-truncate css-truncate-target d-block width-fit">
+        <a class="" title="grades/grade_service.h" href="coverage.grade_service.h.84cdb9b0aee7d779a53e7519643d9dfe.html">grades/grade_service.h</a>
+      </span>
+    </div>
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex flex-justify-end flex-wrap flex-items-baseline gcovr-m-l-5 gcovr-h-100" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 7</span>
+      <span class="meter Progress Progress--large d-inline-flex mr-2" style="width: 200px;">
+        <span class="Progress-item coverage-none" style="width: 0.0%"></span>
+      </span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 18</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 15</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div >
+    </div>
+  </div>
+  <div class="Box-row Box-row--focus-gray py-2 d-flex">
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex col-md-2 gcovr-m-l-5">
+      <span class="mr-2">
+        <svg aria-hidden="true" focusable="false" role="img" class="color-fg-muted" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="display: inline-block; user-select: none; vertical-align: text-bottom; overflow: visible;"><path d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 9 4.25V1.5Zm6.75.062V4.25c0 .138.112.25.25.25h2.688l-.011-.013-2.914-2.914-.013-.011Z"></path></svg>
+      </span>
+      <span class="css-truncate css-truncate-target d-block width-fit">
+        <a class="" title="persistence/database.cpp" href="coverage.database.cpp.f6a1fa2d5998c728fc63e08ac4a945c3.html">persistence/database.cpp</a>
+      </span>
+    </div>
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex flex-justify-end flex-wrap flex-items-baseline gcovr-m-l-5 gcovr-h-100" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 87</span>
+      <span class="meter Progress Progress--large d-inline-flex mr-2" style="width: 200px;">
+        <span class="Progress-item coverage-none" style="width: 0.0%"></span>
+      </span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 136</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 15</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div >
+    </div>
+  </div>
+  <div class="Box-row Box-row--focus-gray py-2 d-flex">
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex col-md-2 gcovr-m-l-5">
+      <span class="mr-2">
+        <svg aria-hidden="true" focusable="false" role="img" class="color-fg-muted" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="display: inline-block; user-select: none; vertical-align: text-bottom; overflow: visible;"><path d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 9 4.25V1.5Zm6.75.062V4.25c0 .138.112.25.25.25h2.688l-.011-.013-2.914-2.914-.013-.011Z"></path></svg>
+      </span>
+      <span class="css-truncate css-truncate-target d-block width-fit">
+        <a class="" title="persistence/repositories.cpp" href="coverage.repositories.cpp.efb1822e884af077ad20a2e7cf17db44.html">persistence/repositories.cpp</a>
+      </span>
+    </div>
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex flex-justify-end flex-wrap flex-items-baseline gcovr-m-l-5 gcovr-h-100" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 251</span>
+      <span class="meter Progress Progress--large d-inline-flex mr-2" style="width: 200px;">
+        <span class="Progress-item coverage-none" style="width: 0.0%"></span>
+      </span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 438</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 26</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div >
+    </div>
+  </div>
+  <div class="Box-row Box-row--focus-gray py-2 d-flex">
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex col-md-2 gcovr-m-l-5">
+      <span class="mr-2">
+        <svg aria-hidden="true" focusable="false" role="img" class="color-fg-muted" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="display: inline-block; user-select: none; vertical-align: text-bottom; overflow: visible;"><path d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 9 4.25V1.5Zm6.75.062V4.25c0 .138.112.25.25.25h2.688l-.011-.013-2.914-2.914-.013-.011Z"></path></svg>
+      </span>
+      <span class="css-truncate css-truncate-target d-block width-fit">
+        <a class="" title="persistence/repositories.h" href="coverage.repositories.h.8f9c151b24a58311fe3a158e10aa5b0f.html">persistence/repositories.h</a>
+      </span>
+    </div>
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex flex-justify-end flex-wrap flex-items-baseline gcovr-m-l-5 gcovr-h-100" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 18</span>
+      <span class="meter Progress Progress--large d-inline-flex mr-2" style="width: 200px;">
+        <span class="Progress-item coverage-none" style="width: 0.0%"></span>
+      </span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 32</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 30</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div >
+    </div>
+  </div>
+  <div class="Box-row Box-row--focus-gray py-2 d-flex">
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex col-md-2 gcovr-m-l-5">
+      <span class="mr-2">
+        <svg aria-hidden="true" focusable="false" role="img" class="color-fg-muted" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="display: inline-block; user-select: none; vertical-align: text-bottom; overflow: visible;"><path d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 9 4.25V1.5Zm6.75.062V4.25c0 .138.112.25.25.25h2.688l-.011-.013-2.914-2.914-.013-.011Z"></path></svg>
+      </span>
+      <span class="css-truncate css-truncate-target d-block width-fit">
+        <a class="" title="reports/report_service.cpp" href="coverage.report_service.cpp.aba1958723c76349920e5a16d90856bf.html">reports/report_service.cpp</a>
+      </span>
+    </div>
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex flex-justify-end flex-wrap flex-items-baseline gcovr-m-l-5 gcovr-h-100" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 255</span>
+      <span class="meter Progress Progress--large d-inline-flex mr-2" style="width: 200px;">
+        <span class="Progress-item coverage-none" style="width: 0.0%"></span>
+      </span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 578</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 9</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div >
+    </div>
+  </div>
+  <div class="Box-row Box-row--focus-gray py-2 d-flex">
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex col-md-2 gcovr-m-l-5">
+      <span class="mr-2">
+        <svg aria-hidden="true" focusable="false" role="img" class="color-fg-muted" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="display: inline-block; user-select: none; vertical-align: text-bottom; overflow: visible;"><path d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 9 4.25V1.5Zm6.75.062V4.25c0 .138.112.25.25.25h2.688l-.011-.013-2.914-2.914-.013-.011Z"></path></svg>
+      </span>
+      <span class="css-truncate css-truncate-target d-block width-fit">
+        <a class="" title="reports/report_service.h" href="coverage.report_service.h.ae2a297f4eec437c1bb252276c9df401.html">reports/report_service.h</a>
+      </span>
+    </div>
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex flex-justify-end flex-wrap flex-items-baseline gcovr-m-l-5 gcovr-h-100" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 3</span>
+      <span class="meter Progress Progress--large d-inline-flex mr-2" style="width: 200px;">
+        <span class="Progress-item coverage-none" style="width: 0.0%"></span>
+      </span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="-">
+      <span class="text-small color-fg-muted mr-2">-</span>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 6</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div >
+    </div>
+  </div>
+  <div class="Box-row Box-row--focus-gray py-2 d-flex">
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex col-md-2 gcovr-m-l-5">
+      <span class="mr-2">
+        <svg aria-hidden="true" focusable="false" role="img" class="color-fg-muted" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="display: inline-block; user-select: none; vertical-align: text-bottom; overflow: visible;"><path d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 9 4.25V1.5Zm6.75.062V4.25c0 .138.112.25.25.25h2.688l-.011-.013-2.914-2.914-.013-.011Z"></path></svg>
+      </span>
+      <span class="css-truncate css-truncate-target d-block width-fit">
+        <a class="" title="student/student_profiles.cpp" href="coverage.student_profiles.cpp.55b80f8cf7b763650b226e96b5ba2edb.html">student/student_profiles.cpp</a>
+      </span>
+    </div>
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex flex-justify-end flex-wrap flex-items-baseline gcovr-m-l-5 gcovr-h-100" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 126</span>
+      <span class="meter Progress Progress--large d-inline-flex mr-2" style="width: 200px;">
+        <span class="Progress-item coverage-none" style="width: 0.0%"></span>
+      </span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 302</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 11</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div >
+    </div>
+  </div>
+  <div class="Box-row Box-row--focus-gray py-2 d-flex">
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex col-md-2 gcovr-m-l-5">
+      <span class="mr-2">
+        <svg aria-hidden="true" focusable="false" role="img" class="color-fg-muted" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="display: inline-block; user-select: none; vertical-align: text-bottom; overflow: visible;"><path d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 9 4.25V1.5Zm6.75.062V4.25c0 .138.112.25.25.25h2.688l-.011-.013-2.914-2.914-.013-.011Z"></path></svg>
+      </span>
+      <span class="css-truncate css-truncate-target d-block width-fit">
+        <a class="" title="student/student_profiles.h" href="coverage.student_profiles.h.44a3e6b3d28d286448281ff2e2cbdadc.html">student/student_profiles.h</a>
+      </span>
+    </div>
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex flex-justify-end flex-wrap flex-items-baseline gcovr-m-l-5 gcovr-h-100" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 4</span>
+      <span class="meter Progress Progress--large d-inline-flex mr-2" style="width: 200px;">
+        <span class="Progress-item coverage-none" style="width: 0.0%"></span>
+      </span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 24</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 7</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div >
+    </div>
+  </div>
+  <div class="Box-row Box-row--focus-gray py-2 d-flex">
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex col-md-2 gcovr-m-l-5">
+      <span class="mr-2">
+        <svg aria-hidden="true" focusable="false" role="img" class="color-fg-muted" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="display: inline-block; user-select: none; vertical-align: text-bottom; overflow: visible;"><path d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 9 4.25V1.5Zm6.75.062V4.25c0 .138.112.25.25.25h2.688l-.011-.013-2.914-2.914-.013-.011Z"></path></svg>
+      </span>
+      <span class="css-truncate css-truncate-target d-block width-fit">
+        <a class="" title="ui/cli.cpp" href="coverage.cli.cpp.59f59f261bd75563b21bfb8d032b3541.html">ui/cli.cpp</a>
+      </span>
+    </div>
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex flex-justify-end flex-wrap flex-items-baseline gcovr-m-l-5 gcovr-h-100" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 744</span>
+      <span class="meter Progress Progress--large d-inline-flex mr-2" style="width: 200px;">
+        <span class="Progress-item coverage-none" style="width: 0.0%"></span>
+      </span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 1779</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 68</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div >
+    </div>
+  </div>
+  <div class="Box-row Box-row--focus-gray py-2 d-flex">
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex col-md-2 gcovr-m-l-5">
+      <span class="mr-2">
+        <svg aria-hidden="true" focusable="false" role="img" class="color-fg-muted" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="display: inline-block; user-select: none; vertical-align: text-bottom; overflow: visible;"><path d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 9 4.25V1.5Zm6.75.062V4.25c0 .138.112.25.25.25h2.688l-.011-.013-2.914-2.914-.013-.011Z"></path></svg>
+      </span>
+      <span class="css-truncate css-truncate-target d-block width-fit">
+        <a class="" title="ui/cli.h" href="coverage.cli.h.2a36e4266da524786a34b9c2d4eedd02.html">ui/cli.h</a>
+      </span>
+    </div>
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex flex-justify-end flex-wrap flex-items-baseline gcovr-m-l-5 gcovr-h-100" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 10</span>
+      <span class="meter Progress Progress--large d-inline-flex mr-2" style="width: 200px;">
+        <span class="Progress-item coverage-none" style="width: 0.0%"></span>
+      </span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="-">
+      <span class="text-small color-fg-muted mr-2">-</span>
+    </div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-1-5 gcovr-m-l-5" data-sort="0.0">
+      <span class="text-small color-fg-muted mr-2">0 / 34</span>
+      <div class="Label--minw">
+        <span class="Label mr-1 Label--coverage-none">0.0%</span>
+      </div >
+    </div>
+  </div>
+</div>
+
+        </main>
+        <hr class="block-separator"/>
+        <footer class="text-center">
+          Created using <a href="http://gcovr.com/en/8.8">GCOVR (Version 8.8)</a>
+          at 2026-11-07 06:07:47+00:00
+        </footer>
+      </div>
+    </div>
+  </body>
+
+</html>

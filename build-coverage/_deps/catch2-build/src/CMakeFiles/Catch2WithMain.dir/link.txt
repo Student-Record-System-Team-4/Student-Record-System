@@ -1,0 +1,2 @@
+C:\MinGW\bin\ar.exe qc libCatch2Maind.a CMakeFiles/Catch2WithMain.dir/catch2/internal/catch_main.cpp.obj
+C:\MinGW\bin\ranlib.exe libCatch2Maind.a

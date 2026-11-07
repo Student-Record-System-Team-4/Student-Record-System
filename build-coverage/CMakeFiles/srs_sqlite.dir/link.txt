@@ -1,0 +1,2 @@
+C:\MinGW\bin\ar.exe qc libsrs_sqlite.a "CMakeFiles/srs_sqlite.dir/_deps/sqlite3-src/sqlite3.c.obj"
+C:\MinGW\bin\ranlib.exe libsrs_sqlite.a

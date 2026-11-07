@@ -9,6 +9,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 include(CTest)
 include(FetchContent)
 
+option(SRS_ENABLE_COVERAGE "Enable GCC/Clang coverage instrumentation" OFF)
+
 # SQLite
 find_package(SQLite3 QUIET)
 
@@ -73,6 +75,15 @@ target_link_libraries(
     srs_core
     PUBLIC ${SRS_SQLITE_TARGET}
 )
+
+if(SRS_ENABLE_COVERAGE)
+    if(NOT CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        message(FATAL_ERROR "SRS_ENABLE_COVERAGE requires GCC or Clang")
+    endif()
+
+    target_compile_options(srs_core PRIVATE --coverage)
+    target_link_options(srs_core PUBLIC --coverage)
+endif()
 
 # Application executable
 add_executable(student_record_system

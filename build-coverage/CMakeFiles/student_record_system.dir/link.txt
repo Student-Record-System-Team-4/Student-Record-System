@@ -1,0 +1,3 @@
+"C:\Program Files\CMake\bin\cmake.exe" -E rm -f CMakeFiles\student_record_system.dir/objects.a
+C:\MinGW\bin\ar.exe qc CMakeFiles\student_record_system.dir/objects.a @CMakeFiles\student_record_system.dir\objects1.rsp
+C:\MinGW\bin\c++.exe -g --coverage -Wl,--whole-archive CMakeFiles\student_record_system.dir/objects.a -Wl,--no-whole-archive -o student_record_system.exe -Wl,--out-implib,libstudent_record_system.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\student_record_system.dir\linkLibs.rsp
