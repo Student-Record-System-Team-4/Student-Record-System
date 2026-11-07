@@ -42,9 +42,10 @@ cmake -S . -B build-coverage -G "MinGW Makefiles" `
   -DBUILD_TESTING=ON `
   -DCMAKE_BUILD_TYPE=Debug `
   -DSRS_ENABLE_COVERAGE=ON
-cmake --build build-coverage --parallel 2
+cmake --build build-coverage --clean-first --parallel 2
 ctest --test-dir build-coverage --output-on-failure
-gcovr --root . --filter "src" --exclude "build-coverage" `
+gcovr --root . --object-directory build-coverage --gcov-executable gcov `
+  --filter "src" --exclude "build-coverage" `
   --txt --html-details coverage.html --fail-under-line 75
 ```
 
