@@ -745,11 +745,11 @@ void Cli::search_students() {
         out_ << "No students match.\n";
         return;
     }
-    out_ << std::left << "\n  " << std::setw(12) << "SRN" << std::setw(24)
+    out_ << std::left << "\n  " << std::setw(16) << "SRN" << std::setw(24)
          << "Name" << std::setw(20) << "Programme" << std::setw(5) << "Sem"
          << "Status\n";
     for (const auto& p : *result.value()) {
-        out_ << "  " << std::setw(12) << p.srn << std::setw(24) << p.name
+        out_ << "  " << std::setw(16) << p.srn << std::setw(24) << p.name
              << std::setw(20) << p.programme << std::setw(5) << p.semester
              << (p.active ? "Active" : "Inactive") << '\n';
     }
@@ -926,10 +926,10 @@ void Cli::view_roster() {
         out_ << "No students are enrolled.\n";
         return;
     }
-    out_ << std::left << "\n  " << std::setw(12) << "SRN" << std::setw(26)
+    out_ << std::left << "\n  " << std::setw(16) << "SRN" << std::setw(26)
          << "Name" << "Semester\n";
     for (const auto& entry : *roster.value()) {
-        out_ << "  " << std::setw(12) << entry.srn << std::setw(26)
+        out_ << "  " << std::setw(16) << entry.srn << std::setw(26)
              << entry.name << entry.semester << '\n';
     }
     out_ << "  " << roster.value()->size() << " enrolled.\n";
