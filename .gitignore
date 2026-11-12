@@ -1,5 +1,8 @@
 /build
-/build-coverage
+/build-*
 /coverage*.html
 /coverage.css
 /coverage.js
+*.gcov
+*.db
+*.db-journal

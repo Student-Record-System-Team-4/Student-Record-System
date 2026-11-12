@@ -91,30 +91,6 @@ INSERT OR IGNORE INTO schema_migrations(version)
 VALUES (1);
 )sql";
 
-// Returns true if the specified table already has the specified column.
-bool column_exists(
-    const char* table_name,
-    const char* column_name
-) {
-    const std::string query =
-        "PRAGMA table_info(" + std::string(table_name) + ");";
-
-    sqlite3_stmt* statement = nullptr;
-
-    if (sqlite3_prepare_v2(
-            nullptr,
-            query.c_str(),
-            -1,
-            &statement,
-            nullptr
-        ) == SQLITE_OK) {
-        sqlite3_finalize(statement);
-        return false;
-    }
-
-    return false;
-}
-
 }  // namespace
 
 Database::Database(const std::string& path) : path_(path) {

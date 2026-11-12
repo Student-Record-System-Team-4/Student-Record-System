@@ -2,8 +2,9 @@
 
 C++ application to manage student academic records.
 
-The repository currently contains the minimum build and test foundation. Feature
-modules will be implemented incrementally in the existing `src/` directories.
+Features: role-based login (Student / Faculty / Admin), student profiles,
+courses and enrollment, grades with GPA/CGPA, attendance with percentages,
+academic reports, audit log, all stored in a local SQLite database.
 
 ## Requirements
 
@@ -11,6 +12,12 @@ modules will be implemented incrementally in the existing `src/` directories.
 - A C++17-compatible compiler
   - Visual Studio 2019 or newer on Windows
   - GCC on Ubuntu
+- Internet access on the first configure: CMake downloads Catch2 (needs `git`)
+  and, if SQLite is not installed (typical on Windows), the SQLite source
+- On Ubuntu: `sudo apt-get install cmake g++ libsqlite3-dev`
+
+To build only the application (no tests, no Catch2 / git needed), add
+`-DSRS_BUILD_TESTS=OFF` to the first `cmake` command below.
 
 ## Build and test on Ubuntu
 
@@ -71,5 +78,17 @@ has no users, so the program asks you to create the first administrator
 ## Documentation
 
 - [Software Requirements Specification](docs/SRS-Document.pdf)
-- - [Testing Report](docs/Testing-Report.md)
+- [Testing Report](docs/Testing-Report.md)
 - [Requirements Traceability](docs/Requirements-Traceability.md)
+
+## Quick manual check
+
+1. Run the executable with a throwaway database: `student_record_system test.db`
+2. Create the first admin (e.g. `admin01` / `Admin12345`), log in.
+3. User management: create a `faculty` user and a `student` user.
+4. Students: register the student. Courses: create a course owned by the
+   faculty user, then enroll the student.
+5. Log in as faculty: enter marks and mark attendance.
+6. Log in as the student: check grades, GPA/CGPA, attendance and report.
+7. Quit with `q`, start again with the same `test.db`: everything must still
+   be there. Delete `test.db` to start over.
