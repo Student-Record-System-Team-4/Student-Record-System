@@ -6,7 +6,7 @@ using srs::auth::AccessControl;
 using srs::auth::Permission;
 using srs::auth::Role;
 
-TEST_CASE("Students can only reach their own records", "[rbac]") {
+TEST_CASE("TC-Auth-05a Students can only reach their own records", "[rbac][SRS-F-003][SRS-SR-002]") {
     REQUIRE(AccessControl::is_allowed(Role::Student, Permission::ViewOwnProfile));
     REQUIRE(AccessControl::is_allowed(Role::Student, Permission::ViewOwnGrades));
     REQUIRE(AccessControl::is_allowed(Role::Student, Permission::ViewOwnAttendance));
@@ -21,7 +21,7 @@ TEST_CASE("Students can only reach their own records", "[rbac]") {
     REQUIRE_FALSE(AccessControl::is_allowed(Role::Student, Permission::GenerateInstitutionReports));
 }
 
-TEST_CASE("Faculty can grade and mark attendance but not administer", "[rbac]") {
+TEST_CASE("TC-Auth-05b Faculty can grade and mark attendance but not administer", "[rbac][SRS-F-003][SRS-SR-002]") {
     REQUIRE(AccessControl::is_allowed(Role::Faculty, Permission::EnterGrades));
     REQUIRE(AccessControl::is_allowed(Role::Faculty, Permission::MarkAttendance));
     REQUIRE(AccessControl::is_allowed(Role::Faculty, Permission::ViewCourseRoster));
@@ -35,7 +35,7 @@ TEST_CASE("Faculty can grade and mark attendance but not administer", "[rbac]") 
     REQUIRE_FALSE(AccessControl::is_allowed(Role::Faculty, Permission::GenerateInstitutionReports));
 }
 
-TEST_CASE("Admins administer the system but do not enter grades", "[rbac]") {
+TEST_CASE("TC-Auth-05c Admins administer the system but do not enter grades", "[rbac][SRS-F-003][SRS-SR-002]") {
     REQUIRE(AccessControl::is_allowed(Role::Admin, Permission::ManageUsers));
     REQUIRE(AccessControl::is_allowed(Role::Admin, Permission::ViewStudentGrades));
     REQUIRE(AccessControl::is_allowed(Role::Admin, Permission::ManageStudents));

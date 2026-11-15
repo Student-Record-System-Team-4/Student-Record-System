@@ -7,7 +7,7 @@
 using srs::auth::AuthenticationService;
 using srs::auth::User;
 
-TEST_CASE("A registered user can log in", "[auth][login]") {
+TEST_CASE("TC-Auth-01 A registered user can log in", "[auth][login][SRS-F-001]") {
     AuthenticationService authentication(
         std::vector<User>{{"student123", "Pass1234"}});
 
@@ -18,7 +18,7 @@ TEST_CASE("A registered user can log in", "[auth][login]") {
     REQUIRE(authentication.is_authenticated(session->id));
 }
 
-TEST_CASE("Invalid credentials are rejected", "[auth][login]") {
+TEST_CASE("TC-Auth-02 Invalid credentials are rejected", "[auth][login][SRS-F-001]") {
     AuthenticationService authentication(
         std::vector<User>{{"student123", "Pass1234"}});
 
@@ -26,7 +26,7 @@ TEST_CASE("Invalid credentials are rejected", "[auth][login]") {
     REQUIRE(authentication.login("unknown", "Pass1234") == nullptr);
 }
 
-TEST_CASE("Logging out terminates the current session", "[auth][logout]") {
+TEST_CASE("TC-Auth-03 Logging out terminates the current session", "[auth][logout][SRS-F-002]") {
     AuthenticationService authentication(
         std::vector<User>{{"student123", "Pass1234"}});
     const auto session = authentication.login("student123", "Pass1234");
@@ -37,7 +37,7 @@ TEST_CASE("Logging out terminates the current session", "[auth][logout]") {
     REQUIRE_FALSE(authentication.logout(session->id));
 }
 
-TEST_CASE("Sessions are independent", "[auth][session]") {
+TEST_CASE("TC-Sec-01b Sessions are independent", "[auth][session][SRS-SR-001]") {
     AuthenticationService authentication(std::vector<User>{
         {"student123", "Pass1234"},
         {"faculty123", "Teach1234"}});
