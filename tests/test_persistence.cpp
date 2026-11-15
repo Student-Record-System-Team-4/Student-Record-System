@@ -47,3 +47,53 @@ TEST_CASE("SQLite constraints reject invalid relationships and duplicates", "[pe
     REQUIRE(users.save({"admin", "hash2", "Admin", true}));
     std::remove(test_database);
 }
+
+TEST_CASE("Database reports an error when the path cannot be opened", "[persistence]") {
+    srs::persistence::Database database("/nonexistent-dir-srs/none/x.db");
+    REQUIRE_FALSE(database.is_open());
+    REQUIRE_FALSE(database.last_error().empty());
+}
+
+TEST_CASE("Transaction cannot be committed twice", "[persistence]") {
+    std::remove(test_database);
+    {
+        srs::persistence::Database database(test_database);
+        REQUIRE(database.is_open());
+        srs::persistence::Transaction transaction(database);
+        REQUIRE(transaction.started());
+        REQUIRE(transaction.commit().has_value());
+        REQUIRE_FALSE(transaction.commit().has_value());
+    }
+    std::remove(test_database);
+}
+
+TEST_CASE("Transaction rolls back when it is not committed", "[persistence]") {
+    std::remove(test_database);
+    {
+        srs::persistence::Database database(test_database);
+        REQUIRE(database.is_open());
+        {
+            srs::persistence::Transaction transaction(database);
+            REQUIRE(transaction.started());
+            REQUIRE(database.execute(
+                "CREATE TABLE rollback_probe(x INTEGER);").has_value());
+        }
+        REQUIRE_FALSE(database.execute(
+            "INSERT INTO rollback_probe VALUES (1);").has_value());
+    }
+    std::remove(test_database);
+}
+
+TEST_CASE("A second transaction cannot start while one is active", "[persistence]") {
+    std::remove(test_database);
+    {
+        srs::persistence::Database database(test_database);
+        REQUIRE(database.is_open());
+        srs::persistence::Transaction first(database);
+        srs::persistence::Transaction second(database);
+        REQUIRE(first.started());
+        REQUIRE_FALSE(second.started());
+        REQUIRE_FALSE(second.commit().has_value());
+    }
+    std::remove(test_database);
+}
