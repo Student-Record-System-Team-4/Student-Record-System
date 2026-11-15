@@ -56,7 +56,11 @@ if(SRS_BUILD_TESTS)
     include(Catch)
 
 endif()
-
+option(SRS_COVERAGE "Instrument code with gcov for coverage" OFF)
+if(SRS_COVERAGE)
+    add_compile_options(--coverage -O0 -g)
+    add_link_options(--coverage)
+endif()
 # Core library
 add_library(srs_core STATIC
     src/core/application.cpp

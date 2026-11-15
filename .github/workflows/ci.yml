@@ -37,3 +37,37 @@ jobs:
 
       - name: Run tests
         run: ctest --test-dir build --build-config Debug --output-on-failure
+  
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake g++ libsqlite3-dev gcovr
+
+      - name: Configure with coverage
+        run: cmake -S . -B build-cov -DCMAKE_BUILD_TYPE=Debug -DSRS_COVERAGE=ON
+
+      - name: Build
+        run: cmake --build build-cov --parallel 2 --target student_record_system test_validator
+
+      - name: Run unit tests
+        run: ./build-cov/test_validator -r console -r junit::out=build-cov/junit.xml
+
+      - name: Generate coverage report
+        run: |
+          mkdir -p coverage
+          gcovr -r . build-cov --filter 'src/' --exclude-throw-branches --exclude-unreachable-branches --print-summary --txt coverage/summary.txt --html-details coverage/index.html
+          cat coverage/summary.txt
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-and-test-results
+          path: |
+            coverage/
+            build-cov/junit.xml
