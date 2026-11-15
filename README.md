@@ -131,5 +131,5 @@ ctest --test-dir build --build-config Release --output-on-failure
   records. SRS-SR-005 therefore remains incomplete.
 - The application is an interactive CLI; there is no graphical or web client.
 - The SRS does not require financial transactions, online-learning features,
-  or live examination proctoring, and those features are intentionally out of
+  or live examination  proctoring, and those features are intentionally out of
   scope.
