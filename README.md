@@ -1,75 +1,135 @@
 # Student Record System
 
-C++ application to manage student academic records.
+The Student Record System is a C++17 command-line application for maintaining
+student profiles and academic records. It uses SQLite for persistent storage
+and separates authentication, authorization, student, course, grade,
+attendance, report, persistence, and CLI responsibilities into modules.
 
-The repository currently contains the minimum build and test foundation. Feature
-modules will be implemented incrementally in the existing `src/` directories.
+## Implemented features
+
+- First-run administrator setup, login, logout, password changes, password
+  reset, account activation/deactivation, and role changes.
+- Role-based access for Students, Faculty, and Admins.
+- Student registration, profile updates, deactivation, own-profile viewing,
+  and administrator search/filtering.
+- Course creation, update, deactivation, enrollment, removal, and rosters.
+- Faculty marks and letter grades for students enrolled in assigned courses.
+- Semester GPA and cumulative CGPA calculation using course credits.
+- Faculty attendance entry with Present, Absent, and Late statuses,
+  percentage calculation, configurable low-attendance threshold, and student
+  self-service viewing.
+- Student academic reports, administrator course-performance reports, and
+  CSV/plain-text report export through the report service.
+- SQLite schema initialization, migrations, foreign-key constraints,
+  transactions, persistence across restarts, and database backup/restore
+  helpers.
+- Input validation, salted SHA-256 password hashes, and a reusable audit
+  logger. Audit logging is not yet connected to every student mutation; see
+  [Known limitations](#known-limitations).
 
 ## Requirements
 
 - CMake 3.20 or newer
-- A C++17-compatible compiler
+- C++17-compatible compiler
   - Visual Studio 2019 or newer on Windows
-  - GCC on Ubuntu
+  - GCC on Ubuntu 20.04 or newer
 
-## Build and test on Ubuntu
+SQLite and Catch2 are found or downloaded by CMake. An internet connection may
+be required on a clean checkout when those dependencies are not already
+available locally.
+
+## Clean build and test
+
+### Ubuntu
 
 From the repository root:
 
 ```bash
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+rm -rf build
+cmake -S . -B build -DBUILD_TESTING=ON -DCMAKE_BUILD_TYPE=Release
 cmake --build build --config Release
 ctest --test-dir build --build-config Release --output-on-failure
 ```
 
-The executable is written to `build/student_record_system`.
+The executable is `build/student_record_system`.
 
-## Build and test on Windows
-
-From PowerShell in the repository root:
+### Windows PowerShell with MinGW
 
 ```powershell
-cmake -S . -B build
+if (Test-Path build) { Remove-Item -Recurse -Force build }
+cmake -S . -B build -G "MinGW Makefiles" -DBUILD_TESTING=ON
+cmake --build build --config Release
+ctest --test-dir build --output-on-failure
+```
+
+The executable is `build\student_record_system.exe`.
+
+### Windows PowerShell with Visual Studio
+
+```powershell
+if (Test-Path build) { Remove-Item -Recurse -Force build }
+cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DBUILD_TESTING=ON
 cmake --build build --config Release
 ctest --test-dir build --build-config Release --output-on-failure
 ```
 
-The executable is written to
-`build\Release\student_record_system.exe` when using a Visual Studio
-generator.
+The executable is `build\Release\student_record_system.exe`.
 
-## Persistent storage
+## Application usage
 
-The production executable initializes a SQLite database automatically. Pass a
-database path as its first argument, or it defaults to
-`student-record-system.db`:
+The executable accepts an optional SQLite database path. If omitted, it uses
+`student-record-system.db` in the current directory:
 
 ```powershell
-.\build\Release\student_record_system.exe .\data\students.db
+.\build\student_record_system.exe .\data\students.db
 ```
 
-The schema enables foreign keys and includes migrations, repositories, unique
-keys, and transaction support for users, student profiles, courses,
-enrollments, grades, attendance, and audit records.
+Create the parent directory first if it does not exist. On the first run,
+enter an administrator username, password, and confirmation. On later runs,
+choose **Log in** and use that account.
 
-## Using the application
+The menus shown after login depend on the role:
 
-Start the executable and follow the menus. On the very first run the database
-has no users, so the program asks you to create the first administrator
-(username, password, confirmation). After that, log in with that account.
+- **Admin:** users, student profiles, courses, enrollments, rosters, student
+  reports, and course-performance reports.
+- **Faculty:** assigned-course rosters, marks/letter grades, and attendance.
+- **Student:** own profile, grades, GPA/CGPA, attendance, and academic report.
 
-- The menus depend on the logged-in role (Student, Faculty, Admin). Only the
-  operations that role may use are listed.
-- Admins manage users, students, courses and enrollments. Faculty enter grades
-  and attendance for their courses and view rosters. Students view their own
-  profile, grades, GPA/CGPA, attendance and academic report.
-- Enter `0` to go back or log out. Enter `q` in the main menu to log out and
-  exit. Passwords are not echoed when typed in a terminal.
-- The CLI only calls the existing services; all validation and permission
-  rules live in the service layer.
+Enter `0` to go back or log out. Enter `q` from the main menu to log out and
+exit. Passwords are hidden when entered in an interactive terminal. A
+repeatable walkthrough and sample records are in
+[Demo data and final demonstration](docs/Demo-Data.md).
+
+## Testing results
+
+The project has one Catch2 test executable registered with CTest and a
+production-executable restart test. The latest clean-build verification on
+Windows is recorded in [Testing Report](docs/Testing-Report.md).
+
+Run the same checks locally with:
+
+```powershell
+cmake --build build --config Release
+ctest --test-dir build --build-config Release --output-on-failure
+```
 
 ## Documentation
 
 - [Software Requirements Specification](docs/SRS-Document.pdf)
-- - [Testing Report](docs/Testing-Report.md)
-- [Requirements Traceability](docs/Requirements-Traceability.md)
+- [Requirements Traceability Matrix](Requirements-Traceability.md)
+- [Testing Report](docs/Testing-Report.md)
+- [Demo data and final demonstration](docs/Demo-Data.md)
+
+## Known limitations
+
+- No automated benchmark currently demonstrates the SRS response-time target
+  or the 5,000-record/50-session scalability target.
+- Linux CI is configured, but the documented test result in this repository is
+  the Windows run recorded in the testing report.
+- `AuditLogger` and the audit table exist and are unit-tested, but student
+  create/update/deactivate operations do not yet consistently emit audit
+  records. SRS-SR-005 therefore remains incomplete.
+- The application is an interactive CLI; there is no graphical or web client.
+- The SRS does not require financial transactions, online-learning features,
+  or live examination proctoring, and those features are intentionally out of
+  scope.

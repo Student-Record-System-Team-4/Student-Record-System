@@ -45,6 +45,23 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(Catch2)
 
+if(WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set(CATCH2_JUNIT_REPORTER
+        "${catch2_SOURCE_DIR}/src/catch2/reporters/catch_reporter_junit.cpp")
+    file(READ "${CATCH2_JUNIT_REPORTER}" CATCH2_JUNIT_CONTENT)
+    string(REPLACE
+        "#if defined (_MSC_VER) || defined (__MINGW32__)"
+        "#if defined (_MSC_VER)"
+        CATCH2_JUNIT_CONTENT
+        "${CATCH2_JUNIT_CONTENT}")
+    string(REPLACE
+        "#elif defined (CATCH_PLATFORM_PLAYSTATION)"
+        "#elif defined (__MINGW32__)\n            timeInfo = *std::gmtime(&rawtime);\n#elif defined (CATCH_PLATFORM_PLAYSTATION)"
+        CATCH2_JUNIT_CONTENT
+        "${CATCH2_JUNIT_CONTENT}")
+    file(WRITE "${CATCH2_JUNIT_REPORTER}" "${CATCH2_JUNIT_CONTENT}")
+endif()
+
 list(APPEND CMAKE_MODULE_PATH "${catch2_SOURCE_DIR}/extras")
 include(Catch)
 
