@@ -33,7 +33,7 @@ std::string login_id(AuthenticationService& auth,
 
 }  // namespace
 
-TEST_CASE("Role is assigned and enforced per session", "[rbac][accounts]") {
+TEST_CASE("TC-Auth-04a Role is assigned and enforced per session", "[rbac][accounts][SRS-F-003]") {
     AuthenticationService auth(seed_users());
     UserAccountService accounts(auth);
 
@@ -54,7 +54,7 @@ TEST_CASE("Role is assigned and enforced per session", "[rbac][accounts]") {
     REQUIRE(denied.error() == ErrorCode::PERMISSION_DENIED);
 }
 
-TEST_CASE("Unauthenticated or logged-out sessions are refused", "[rbac][accounts]") {
+TEST_CASE("TC-Sec-01a Unauthenticated or logged-out sessions are refused", "[rbac][accounts][SRS-SR-001]") {
     AuthenticationService auth(seed_users());
     UserAccountService accounts(auth);
 
@@ -70,7 +70,7 @@ TEST_CASE("Unauthenticated or logged-out sessions are refused", "[rbac][accounts
     REQUIRE_FALSE(auth.is_registered("newuser1"));
 }
 
-TEST_CASE("Only admins can manage accounts", "[accounts]") {
+TEST_CASE("TC-Auth-06a Only admins can manage accounts", "[accounts][SRS-F-004]") {
     AuthenticationService auth(seed_users());
     UserAccountService accounts(auth);
     const auto student = login_id(auth, "student01", "Pass1234");
@@ -88,7 +88,7 @@ TEST_CASE("Only admins can manage accounts", "[accounts]") {
     REQUIRE(auth.login("admin01", "Admin1234") != nullptr);
 }
 
-TEST_CASE("Admin can create accounts", "[accounts]") {
+TEST_CASE("TC-Auth-06b Admin can create accounts", "[accounts][SRS-F-004]") {
     AuthenticationService auth(seed_users());
     UserAccountService accounts(auth);
     const auto admin = login_id(auth, "admin01", "Admin1234");
@@ -112,7 +112,7 @@ TEST_CASE("Admin can create accounts", "[accounts]") {
     REQUIRE_FALSE(auth.is_registered("goodname"));
 }
 
-TEST_CASE("Deactivation is enforced and reversible", "[accounts]") {
+TEST_CASE("TC-Auth-06c Deactivation is enforced and reversible", "[accounts][SRS-F-004]") {
     AuthenticationService auth(seed_users());
     UserAccountService accounts(auth);
     const auto admin = login_id(auth, "admin01", "Admin1234");
@@ -130,7 +130,7 @@ TEST_CASE("Deactivation is enforced and reversible", "[accounts]") {
     REQUIRE(missing.error() == ErrorCode::NOT_FOUND);
 }
 
-TEST_CASE("Role changes take effect immediately", "[accounts][rbac]") {
+TEST_CASE("TC-Auth-04b Role changes take effect immediately", "[accounts][rbac][SRS-F-003]") {
     AuthenticationService auth(seed_users());
     UserAccountService accounts(auth);
     const auto admin = login_id(auth, "admin01", "Admin1234");
@@ -146,7 +146,7 @@ TEST_CASE("Role changes take effect immediately", "[accounts][rbac]") {
     REQUIRE(missing.error() == ErrorCode::NOT_FOUND);
 }
 
-TEST_CASE("An admin cannot lock themselves out", "[accounts]") {
+TEST_CASE("TC-Auth-06d An admin cannot lock themselves out", "[accounts][SRS-F-004]") {
     AuthenticationService auth(seed_users());
     UserAccountService accounts(auth);
     const auto admin = login_id(auth, "admin01", "Admin1234");
@@ -157,7 +157,7 @@ TEST_CASE("An admin cannot lock themselves out", "[accounts]") {
     REQUIRE(accounts.authorize(admin, Permission::ManageUsers));
 }
 
-TEST_CASE("Admin can reset a password", "[accounts][password]") {
+TEST_CASE("TC-Auth-06e Admin can reset a password", "[accounts][password][SRS-F-004]") {
     AuthenticationService auth(seed_users());
     UserAccountService accounts(auth);
     const auto admin = login_id(auth, "admin01", "Admin1234");
@@ -174,7 +174,7 @@ TEST_CASE("Admin can reset a password", "[accounts][password]") {
     REQUIRE(missing.error() == ErrorCode::NOT_FOUND);
 }
 
-TEST_CASE("Users can change their own password", "[accounts][password]") {
+TEST_CASE("TC-Auth-07 Users can change their own password", "[accounts][password][SRS-F-005]") {
     AuthenticationService auth(seed_users());
     UserAccountService accounts(auth);
     const auto student = login_id(auth, "student01", "Pass1234");

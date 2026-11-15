@@ -22,7 +22,7 @@ StudentProfile profile(
 
 }  // namespace
 
-TEST_CASE("Admin can register and retrieve a student profile", "[student]") {
+TEST_CASE("TC-Stu-01a Admin can register and retrieve a student profile", "[student][SRS-F-006]") {
     AuthenticationService authentication(
         std::vector<srs::auth::User>{{"admin01", "Admin1234", srs::auth::Role::Admin},
                                      {"student123", "Pass1234"}});
@@ -44,7 +44,7 @@ TEST_CASE("Admin can register and retrieve a student profile", "[student]") {
     REQUIRE(result.value()->programme == "Computer Science");
 }
 
-TEST_CASE("Student profile ownership is enforced", "[student]") {
+TEST_CASE("TC-Stu-03 Student profile ownership is enforced", "[student][SRS-F-008]") {
     AuthenticationService authentication(
         std::vector<srs::auth::User>{
             {"admin01", "Admin1234", srs::auth::Role::Admin},
@@ -66,7 +66,7 @@ TEST_CASE("Student profile ownership is enforced", "[student]") {
     REQUIRE(students.view_own_profile(student->id));
 }
 
-TEST_CASE("Admin can update and deactivate a student", "[student]") {
+TEST_CASE("TC-Stu-02 Admin can update and deactivate a student", "[student][SRS-F-007]") {
     AuthenticationService authentication(
         std::vector<srs::auth::User>{{"admin01", "Admin1234", srs::auth::Role::Admin},
                                      {"student123", "Pass1234"}});
@@ -94,7 +94,7 @@ TEST_CASE("Admin can update and deactivate a student", "[student]") {
     REQUIRE_FALSE(students.view_own_profile(student->id));
 }
 
-TEST_CASE("Admin can search students by profile fields", "[student]") {
+TEST_CASE("TC-Stu-04 Admin can search students by profile fields", "[student][SRS-F-009]") {
     AuthenticationService authentication(
         std::vector<srs::auth::User>{
             {"admin01", "Admin1234", srs::auth::Role::Admin},
@@ -124,7 +124,7 @@ TEST_CASE("Admin can search students by profile fields", "[student]") {
     REQUIRE(semester_result.value()->front().username == "student456");
 }
 
-TEST_CASE("Invalid and duplicate student records are rejected", "[student]") {
+TEST_CASE("TC-Stu-01b Invalid and duplicate student records are rejected", "[student][SRS-F-006][SRS-SR-004]") {
     AuthenticationService authentication(
         std::vector<srs::auth::User>{{"admin01", "Admin1234", srs::auth::Role::Admin},
                                      {"student123", "Pass1234"}});
